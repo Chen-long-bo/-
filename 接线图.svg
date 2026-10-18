@@ -1,0 +1,102 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="840" viewBox="0 0 1120 840" font-family="Microsoft YaHei, SimHei, Arial, sans-serif">
+  <rect width="1120" height="840" fill="#101014"/>
+  <text x="40" y="36" fill="#ffffff" font-size="22" font-weight="bold">蓝牙遥控麦轮小车 — 接线总览（v0.1）</text>
+
+  <!-- 图例 -->
+  <g font-size="13">
+    <line x1="40" y1="52" x2="80" y2="52" stroke="#e74c3c" stroke-width="3"/>
+    <text x="88" y="56" fill="#dddddd">电源</text>
+    <line x1="150" y1="52" x2="190" y2="52" stroke="#3498db" stroke-width="3"/>
+    <text x="198" y="56" fill="#dddddd">串口UART</text>
+    <line x1="300" y1="52" x2="340" y2="52" stroke="#2ecc71" stroke-width="3"/>
+    <text x="348" y="56" fill="#dddddd">SWD下载</text>
+  </g>
+
+  <!-- 电池 -->
+  <rect x="30" y="80" width="220" height="110" rx="10" fill="#1b1b22" stroke="#e74c3c" stroke-width="2"/>
+  <text x="140" y="108" fill="#ffffff" font-size="16" font-weight="bold" text-anchor="middle">3S锂电池</text>
+  <text x="140" y="132" fill="#cccccc" font-size="13" text-anchor="middle">满电12.6V</text>
+  <text x="140" y="154" fill="#e74c3c" font-size="13" text-anchor="middle">+ 正极 / - 负极</text>
+
+  <!-- 稳压模块 -->
+  <rect x="30" y="270" width="280" height="250" rx="10" fill="#1b1b22" stroke="#e74c3c" stroke-width="2"/>
+  <text x="170" y="298" fill="#ffffff" font-size="16" font-weight="bold" text-anchor="middle">稳压模块</text>
+  <text x="170" y="320" fill="#cccccc" font-size="13" text-anchor="middle">输入0~30V</text>
+  <text x="170" y="342" fill="#cccccc" font-size="13" text-anchor="middle">输出 3.3V / 5V / 12V（同时）</text>
+  <text x="170" y="368" fill="#e74c3c" font-size="13" text-anchor="middle">IN+ / IN-</text>
+  <text x="170" y="392" fill="#e74c3c" font-size="13" text-anchor="middle">12V+ / 12V-</text>
+  <text x="170" y="416" fill="#e74c3c" font-size="13" text-anchor="middle">5V+ / 5V-</text>
+  <text x="170" y="440" fill="#e74c3c" font-size="13" text-anchor="middle">3.3V+ / 3.3V-</text>
+
+  <!-- 驱动模块 -->
+  <rect x="660" y="70" width="310" height="270" rx="10" fill="#1b1b22" stroke="#e74c3c" stroke-width="2"/>
+  <text x="815" y="98" fill="#ffffff" font-size="16" font-weight="bold" text-anchor="middle">四路编码器电机驱动模块</text>
+  <text x="815" y="122" fill="#cccccc" font-size="13" text-anchor="middle">电源口：6~12V</text>
+  <text x="815" y="146" fill="#3498db" font-size="13" text-anchor="middle">UART：RX / TX / GND（5V不接）</text>
+  <text x="815" y="170" fill="#dddddd" font-size="13" text-anchor="middle">电机座：A/B/C/D</text>
+  <text x="815" y="192" fill="#dddddd" font-size="13" text-anchor="middle">A左前 B右前 C左后 D右后</text>
+
+  <!-- STM32 -->
+  <rect x="390" y="510" width="310" height="230" rx="10" fill="#1b1b22" stroke="#3498db" stroke-width="2"/>
+  <text x="545" y="538" fill="#ffffff" font-size="16" font-weight="bold" text-anchor="middle">STM32F407VET6</text>
+  <text x="545" y="562" fill="#3498db" font-size="13" text-anchor="middle">PA9 / PA10 = USART1（蓝牙）</text>
+  <text x="545" y="586" fill="#3498db" font-size="13" text-anchor="middle">PA2 / PA3 = USART2（驱动模块）</text>
+  <text x="545" y="610" fill="#3498db" font-size="13" text-anchor="middle">PB10 / PB11 = USART3（调试）</text>
+  <text x="545" y="634" fill="#2ecc71" font-size="13" text-anchor="middle">PA13 / PA14 = SWD</text>
+  <text x="545" y="658" fill="#e74c3c" font-size="13" text-anchor="middle">5V / GND = 供电</text>
+  <text x="545" y="682" fill="#e74c3c" font-size="13" text-anchor="middle">3V3 = 给蓝牙供电</text>
+
+  <!-- HC-04 -->
+  <rect x="790" y="350" width="270" height="150" rx="10" fill="#1b1b22" stroke="#3498db" stroke-width="2"/>
+  <text x="925" y="378" fill="#ffffff" font-size="16" font-weight="bold" text-anchor="middle">HC-04 蓝牙</text>
+  <text x="925" y="402" fill="#e74c3c" font-size="13" text-anchor="middle">3V3 / GND</text>
+  <text x="925" y="426" fill="#3498db" font-size="13" text-anchor="middle">RXD / TXD</text>
+  <text x="925" y="450" fill="#cccccc" font-size="13" text-anchor="middle">KEY / STA 悬空</text>
+
+  <!-- USB转串口 -->
+  <rect x="790" y="620" width="270" height="130" rx="10" fill="#1b1b22" stroke="#3498db" stroke-width="2"/>
+  <text x="925" y="648" fill="#ffffff" font-size="16" font-weight="bold" text-anchor="middle">USB转串口（调试）</text>
+  <text x="925" y="674" fill="#3498db" font-size="13" text-anchor="middle">RXD / TXD / GND</text>
+  <text x="925" y="698" fill="#cccccc" font-size="13" text-anchor="middle">3.3V / 5V 不接</text>
+
+  <!-- ST-Link -->
+  <rect x="30" y="580" width="240" height="130" rx="10" fill="#1b1b22" stroke="#2ecc71" stroke-width="2"/>
+  <text x="150" y="608" fill="#ffffff" font-size="16" font-weight="bold" text-anchor="middle">ST-Link</text>
+  <text x="150" y="634" fill="#2ecc71" font-size="13" text-anchor="middle">SWDIO / SWCLK / GND</text>
+  <text x="150" y="658" fill="#cccccc" font-size="13" text-anchor="middle">3.3V 可选</text>
+
+  <!-- 电源线 -->
+  <g stroke="#e74c3c" stroke-width="2" fill="#e74c3c" font-size="12">
+    <line x1="140" y1="190" x2="140" y2="270"/>
+    <text x="146" y="235">电池+/- → 稳压IN+/-</text>
+
+    <line x1="310" y1="310" x2="660" y2="310"/>
+    <text x="330" y="302">稳压12V+/- → 驱动模块电源口</text>
+
+    <line x1="310" y1="410" x2="390" y2="570"/>
+    <text x="300" y="500">稳压5V+/- → STM32 5V/GND</text>
+
+    <line x1="700" y1="650" x2="790" y2="390"/>
+    <text x="696" y="520">STM32 3V3/GND → HC-04 3V3/GND</text>
+  </g>
+
+  <!-- UART线 -->
+  <g stroke="#3498db" stroke-width="2" fill="#3498db" font-size="12">
+    <line x1="700" y1="550" x2="790" y2="405"/>
+    <text x="706" y="470">PA9 → RXD / PA10 ← TXD</text>
+
+    <line x1="470" y1="510" x2="700" y2="340"/>
+    <text x="470" y="430">PA2/PA3 ↔ 驱动模块RX/TX</text>
+
+    <line x1="700" y1="660" x2="790" y2="660"/>
+    <text x="706" y="654">PB10/PB11 ↔ RXD/TXD</text>
+  </g>
+
+  <!-- SWD线 -->
+  <g stroke="#2ecc71" stroke-width="2" fill="#2ecc71" font-size="12">
+    <line x1="270" y1="630" x2="390" y2="600"/>
+    <text x="282" y="624">SWDIO/SWCLK/GND → PA13/PA14/GND</text>
+  </g>
+
+  <text x="40" y="810" fill="#f1c40f" font-size="14">注意：所有 GND 共地；驱动模块UART的5V不接；USB转串口的3.3V/5V不接；电机先架空再上电。</text>
+</svg>

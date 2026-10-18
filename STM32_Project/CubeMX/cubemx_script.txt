@@ -1,0 +1,6 @@
+﻿config load "D:\CODEX-WORK\蓝牙遥控麦轮小车\STM32_Project\CubeMX\MecanumCar.ioc"
+project name MecanumCar
+project toolchain "MDK-Arm"
+project path "D:\CODEX-WORK\蓝牙遥控麦轮小车\STM32_Project\CubeMX"
+project generate
+exit

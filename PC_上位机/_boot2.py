@@ -1,0 +1,10 @@
+﻿import serial, subprocess, time
+s=serial.Serial("COM5",115200,timeout=0.5)
+s.reset_input_buffer()
+subprocess.run(["python","-m","pyocd","cmd","-t","cortex_m","-c","reset"],timeout=60,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+time.sleep(1.2)
+d=s.read(4096)
+print("len",len(d))
+print(d[:200])
+print("hex", d[:200].hex(" ").upper())
+s.close()
