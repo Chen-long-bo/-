@@ -1,0 +1,2235 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090c10">
+  <title>教学手册 · 麦轮实验室</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="manual-page" id="manual-top">
+  <div class="manual-shell">
+    <header class="manual-topbar">
+      <a class="brand" href="index.html" aria-label="返回可视化主页">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span class="brand-text"><strong>MECANUM / LAB</strong><small>教学手册</small></span>
+      </a>
+      <a class="manual-back" href="index.html">← 返回可视化主页</a>
+    </header>
+    <article class="manual-reader">
+<h1 id="麦轮小车-零基础教学手册-阶段-3">麦轮小车 — 零基础教学手册（阶段 3）</h1>
+<div class="toc">
+<ul>
+<li><a href="#麦轮小车-零基础教学手册-阶段-3">麦轮小车 — 零基础教学手册（阶段 3）</a><ul>
+<li><a href="#0-先看结论-这套工程到底在做什么">0. 先看结论：这套工程到底在做什么</a><ul>
+<li><a href="#0-1-一句话概括">0.1 一句话概括</a></li>
+<li><a href="#0-2-四个轮子的名字">0.2 四个轮子的名字</a></li>
+<li><a href="#0-3-车体坐标的正方向">0.3 车体坐标的正方向</a></li>
+<li><a href="#0-4-本手册的阅读顺序">0.4 本手册的阅读顺序</a></li>
+</ul>
+</li>
+<li><a href="#1-系统全景">1. 系统全景</a><ul>
+<li><a href="#1-1-系统架构图">1.1 系统架构图</a></li>
+<li><a href="#1-2-硬件清单与各自职责">1.2 硬件清单与各自职责</a></li>
+<li><a href="#1-3-电源和共地-这是最容易被忽略的安全问题">1.3 电源和共地：这是最容易被忽略的安全问题</a></li>
+<li><a href="#1-4-电源-逻辑电平和信号电平不是一回事">1.4 电源、逻辑电平和信号电平不是一回事</a></li>
+</ul>
+</li>
+<li><a href="#2-完整数据流-从电脑到四个轮子">2. 完整数据流：从电脑到四个轮子</a><ul>
+<li><a href="#2-1-数据流总图">2.1 数据流总图</a></li>
+<li><a href="#2-2-手动遥控的正向链路">2.2 手动遥控的正向链路</a></li>
+<li><a href="#2-3-反馈链路-轮子实际转了多少">2.3 反馈链路：轮子实际转了多少</a></li>
+<li><a href="#2-4-每一步落在哪个文件-哪个函数">2.4 每一步落在哪个文件、哪个函数</a></li>
+<li><a href="#2-5-有线调试链路为什么也存在">2.5 有线调试链路为什么也存在</a></li>
+</ul>
+</li>
+<li><a href="#3-硬件原理-电机-编码器-pwm-h-桥-麦轮">3. 硬件原理：电机、编码器、PWM、H 桥、麦轮</a><ul>
+<li><a href="#3-1-直流减速电机">3.1 直流减速电机</a></li>
+<li><a href="#3-2-编码器是什么">3.2 编码器是什么</a><ul>
+<li><a href="#ppr-cpr-和-4-倍频">PPR、CPR 和 4 倍频</a></li>
+<li><a href="#编码器方向">编码器方向</a></li>
+</ul>
+</li>
+<li><a href="#3-3-pwm-和-h-桥">3.3 PWM 和 H 桥</a><ul>
+<li><a href="#pwm">PWM</a></li>
+<li><a href="#h-桥">H 桥</a></li>
+</ul>
+</li>
+<li><a href="#3-4-麦轮为什么能全向移动">3.4 麦轮为什么能全向移动</a></li>
+</ul>
+</li>
+<li><a href="#4-通信-uart-蓝牙和协议">4. 通信：UART、蓝牙和协议</a><ul>
+<li><a href="#4-1-uart-是什么">4.1 UART 是什么</a></li>
+<li><a href="#4-2-三个串口的分工">4.2 三个串口的分工</a></li>
+<li><a href="#4-3-经典蓝牙-spp-与-ble-的区别">4.3 经典蓝牙 SPP 与 BLE 的区别</a></li>
+<li><a href="#4-4-二进制协议帧">4.4 二进制协议帧</a><ul>
+<li><a href="#为什么需要校验和">为什么需要校验和</a></li>
+<li><a href="#一个具体例子">一个具体例子</a></li>
+<li><a href="#常见指令表">常见指令表</a></li>
+</ul>
+</li>
+<li><a href="#4-5-驱动模块文本协议">4.5 驱动模块文本协议</a></li>
+<li><a href="#4-6-帧解析状态机">4.6 帧解析状态机</a></li>
+</ul>
+</li>
+<li><a href="#5-控制算法-从-会转-到-可控">5. 控制算法：从“会转”到“可控”</a><ul>
+<li><a href="#5-1-控制周期与实时性">5.1 控制周期与实时性</a></li>
+<li><a href="#5-2-开环与闭环">5.2 开环与闭环</a></li>
+<li><a href="#5-3-算法-麦轮逆运动学">5.3 【算法】麦轮逆运动学</a></li>
+<li><a href="#5-4-算法-归一化与最小驱动">5.4 【算法】归一化与最小驱动</a></li>
+<li><a href="#5-5-算法-加速度平滑">5.5 【算法】加速度平滑</a></li>
+<li><a href="#5-6-三种停止方式">5.6 三种停止方式</a></li>
+<li><a href="#5-7-算法-原地旋转与时间标定">5.7 【算法】原地旋转与时间标定</a></li>
+<li><a href="#5-8-算法-pid-位置环">5.8 【算法】PID 位置环</a><ul>
+<li><a href="#pid-是什么">PID 是什么</a></li>
+<li><a href="#本工程的位置环">本工程的位置环</a></li>
+<li><a href="#当前-pid-代码的三个细节">当前 PID 代码的三个细节</a></li>
+<li><a href="#pid-调参顺序-位置环">PID 调参顺序（位置环）</a></li>
+</ul>
+</li>
+<li><a href="#5-9-固定路线">5.9 固定路线</a></li>
+</ul>
+</li>
+<li><a href="#6-软件结构与代码地图">6. 软件结构与代码地图</a><ul>
+<li><a href="#6-1-目录总览">6.1 目录总览</a></li>
+<li><a href="#6-2-主固件用户层文件">6.2 主固件用户层文件</a></li>
+<li><a href="#6-3-cubemx-生成层文件">6.3 CubeMX 生成层文件</a></li>
+<li><a href="#6-4-上位机文件">6.4 上位机文件</a></li>
+<li><a href="#6-5-核心函数讲解">6.5 核心函数讲解</a><ul>
+<li><a href="#main-c-的-main">main.c 的 main()</a></li>
+<li><a href="#user_app-c-的-hal_uart_rxcpltcallback">user_app.c 的 HAL_UART_RxCpltCallback()</a></li>
+<li><a href="#control_mode-c-的-controlmode_poll">control_mode.c 的 ControlMode_Poll()</a></li>
+<li><a href="#chassis_control-c-的-chassis_inverse">chassis_control.c 的 Chassis_Inverse()</a></li>
+<li><a href="#bsp_encoder-c-的-encoder_getwheelspeeds">bsp_encoder.c 的 Encoder_GetWheelSpeeds()</a></li>
+<li><a href="#driver_comm-c-的-drivercomm_onrxbyte">driver_comm.c 的 DriverComm_OnRxByte()</a></li>
+<li><a href="#bsp_bluetooth-c-的-bluetooth_onrxbyte">bsp_bluetooth.c 的 Bluetooth_OnRxByte()</a></li>
+</ul>
+</li>
+<li><a href="#6-6-代码注释怎么读">6.6 代码注释怎么读</a></li>
+</ul>
+</li>
+<li><a href="#7-参数中心-每一个能改的值">7. 参数中心：每一个能改的值</a><ul>
+<li><a href="#7-1-三类参数">7.1 三类参数</a></li>
+<li><a href="#7-2-config-h-参数总表">7.2 config.h 参数总表</a></li>
+<li><a href="#7-3-control_mode-c-里的运行期变量">7.3 control_mode.c 里的运行期变量</a></li>
+<li><a href="#7-4-上位机-config-py-的关键值">7.4 上位机 config.py 的关键值</a></li>
+<li><a href="#7-5-改参数的顺序">7.5 改参数的顺序</a></li>
+</ul>
+</li>
+<li><a href="#8-标定与实验流程">8. 标定与实验流程</a><ul>
+<li><a href="#8-1-上电前的安全清单">8.1 上电前的安全清单</a></li>
+<li><a href="#8-2-实验-1-链路自检">8.2 实验 1：链路自检</a></li>
+<li><a href="#8-3-实验-2-单轮方向和编码器">8.3 实验 2：单轮方向和编码器</a></li>
+<li><a href="#8-4-实验-3-编码器-cpr-标定">8.4 实验 3：编码器 CPR 标定</a></li>
+<li><a href="#8-5-实验-4-最小驱动">8.5 实验 4：最小驱动</a></li>
+<li><a href="#8-6-实验-5-旋转标定">8.6 实验 5：旋转标定</a></li>
+<li><a href="#8-7-实验-6-pid-位置停">8.7 实验 6：PID 位置停</a></li>
+<li><a href="#8-8-实验-7-固定路线">8.8 实验 7：固定路线</a></li>
+</ul>
+</li>
+<li><a href="#9-故障排查树">9. 故障排查树</a><ul>
+<li><a href="#9-1-蓝牙连接成功但没有数据">9.1 蓝牙连接成功但没有数据</a></li>
+<li><a href="#9-2-电机不转">9.2 电机不转</a></li>
+<li><a href="#9-3-轮子震动-转一下停一下">9.3 轮子震动、转一下停一下</a></li>
+<li><a href="#9-4-编码器为-0-或方向相反">9.4 编码器为 0 或方向相反</a></li>
+<li><a href="#9-5-前进斜行-横移方向不对-旋转方向不对">9.5 前进斜行、横移方向不对、旋转方向不对</a></li>
+<li><a href="#9-6-路线刚开始就跳到第三条边">9.6 路线刚开始就跳到第三条边</a></li>
+<li><a href="#9-7-pid-抖动或超调">9.7 PID 抖动或超调</a></li>
+<li><a href="#9-8-keil-编译-烧录问题">9.8 Keil 编译/烧录问题</a></li>
+</ul>
+</li>
+<li><a href="#10-自测题-确认你真的理解了">10. 自测题：确认你真的理解了</a><ul>
+<li><a href="#10-1-基础题">10.1 基础题</a></li>
+<li><a href="#10-2-协议题">10.2 协议题</a></li>
+<li><a href="#10-3-算法-题">10.3 【算法】题</a></li>
+<li><a href="#10-4-排错题">10.4 排错题</a></li>
+</ul>
+</li>
+<li><a href="#11-目前不确定-需要实车确认的地方">11. 目前不确定、需要实车确认的地方</a></li>
+<li><a href="#12-最小改动清单-先不动源代码">12. 最小改动清单（先不动源代码）</a><ul>
+<li><a href="#p0-先让蓝牙链路稳定">P0：先让蓝牙链路稳定</a></li>
+<li><a href="#p1-编码器标定">P1：编码器标定</a></li>
+<li><a href="#p2-旋转标定">P2：旋转标定</a></li>
+<li><a href="#p3-路线同步">P3：路线同步</a></li>
+<li><a href="#p4-平滑和低速">P4：平滑和低速</a></li>
+<li><a href="#p5-工程清理-暂不执行">P5：工程清理（暂不执行）</a></li>
+</ul>
+</li>
+<li><a href="#13-专业术语表">13. 专业术语表</a></li>
+<li><a href="#14-建议的下一步">14. 建议的下一步</a></li>
+<li><a href="#15-版本记录">15. 版本记录</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<blockquote>
+<p>工程目录：<code>D:\CODEX-WORK\蓝牙遥控麦轮小车</code><br>
+适用对象：没有编程基础，但愿意按步骤接线、烧录、观察和记录现象的使用者。<br>
+本手册的目标不是让你背代码，而是让你逐步建立这张心智地图：</p>
+</blockquote>
+<pre><code class="language-text">电池供电
+  ↓
+电脑/手机发指令
+  ↓
+HC-04 蓝牙把字节送到 STM32
+  ↓
+STM32 解析协议、解算麦轮速度、做平滑/位置控制
+  ↓
+驱动模块接收四轮目标速度，自己完成 PWM 和速度闭环
+  ↓
+电机转动
+  ↓
+编码器把实际转动送回驱动模块，再回到 STM32 和电脑
+</code></pre>
+<blockquote>
+<p>说明：本阶段只新增教学文档，不修改任何源代码，也不删除重复文件和临时脚本。<br>
+文档里的 <code>【算法】</code> 标记表示：这一段不是“接上线就能懂”的基础代码，而是需要理解原理、可以单独标定和调参的算法部分。</p>
+</blockquote>
+<hr>
+<h2 id="0-先看结论-这套工程到底在做什么">0. 先看结论：这套工程到底在做什么</h2>
+<h3 id="0-1-一句话概括">0.1 一句话概括</h3>
+<p>这是一套“<strong>电脑/手机 → 蓝牙串口 → STM32 → 四路电机驱动模块 → 四个麦轮</strong>”的遥控小车工程；STM32 不直接产生电机 PWM，而是把车体速度换算成四个轮子的目标速度，通过串口发送给驱动模块，由驱动模块完成底层电机闭环。</p>
+<h3 id="0-2-四个轮子的名字">0.2 四个轮子的名字</h3>
+<p>本工程统一使用下面的名字，后面所有文档、命令和曲线都按这个顺序：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>编号</th>
+<th>名字</th>
+<th>位置</th>
+<th>常见用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A</td>
+<td>左前轮</td>
+<td>车头左侧</td>
+<td><code>wheel 0</code> 对应 A</td>
+</tr>
+<tr>
+<td>B</td>
+<td>右前轮</td>
+<td>车头右侧</td>
+<td><code>wheel 1</code> 对应 B</td>
+</tr>
+<tr>
+<td>C</td>
+<td>左后轮</td>
+<td>车尾左侧</td>
+<td><code>wheel 2</code> 对应 C</td>
+</tr>
+<tr>
+<td>D</td>
+<td>右后轮</td>
+<td>车尾右侧</td>
+<td><code>wheel 3</code> 对应 D</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="0-3-车体坐标的正方向">0.3 车体坐标的正方向</h3>
+<p>代码使用的坐标约定：</p>
+<pre><code class="language-text">vx &gt; 0：向前
+vy &gt; 0：向左
+wz &gt; 0：逆时针旋转（从上往下看，车头向左转）
+</code></pre>
+<p>这三个量分别是：</p>
+<ul>
+<li><code>vx</code>：前后平移速度，单位 <code>m/s</code>；</li>
+<li><code>vy</code>：左右平移速度，单位 <code>m/s</code>；</li>
+<li><code>wz</code>：旋转角速度，单位 <code>rad/s</code>。</li>
+</ul>
+<blockquote>
+<p>注意：这是“数学约定”，不是“轮子实际一定这样转”。如果实车方向反了，先做单轮方向测试，再调整轮子符号或接线，不要直接猜。</p>
+</blockquote>
+<h3 id="0-4-本手册的阅读顺序">0.4 本手册的阅读顺序</h3>
+<p>建议不要从第一页硬读到最后一页，而是按下面的顺序：</p>
+<ol>
+<li><strong>先看第 1 章和第 2 章</strong>：知道有哪些设备、数据怎么走；</li>
+<li><strong>再看第 3 章</strong>：理解电机、编码器、PWM、H 桥、麦轮；</li>
+<li><strong>接着看第 4 章</strong>：理解串口和协议；</li>
+<li><strong>然后看第 5 章</strong>：理解【算法】部分；</li>
+<li><strong>最后看第 6～9 章</strong>：按文件、参数、标定和故障排查动手；</li>
+<li>每学完一块，回到第 10 章的“自测题”检查自己是否真的理解。</li>
+</ol>
+<hr>
+<h2 id="1-系统全景">1. 系统全景</h2>
+<h3 id="1-1-系统架构图">1.1 系统架构图</h3>
+<p><img alt="系统架构图" src="assets/system_architecture.svg"></p>
+<p>这张图把系统分成五层：</p>
+<pre><code class="language-text">应用层：电脑上位机、手机蓝牙串口助手
+通信层：HC-04 蓝牙、USART、二进制协议
+控制层：模式状态机、麦轮运动学、平滑、位置 PID
+设备层：驱动模块通信、电机输出、编码器读取
+执行/传感层：四个电机、四个编码器、四个麦轮
+</code></pre>
+<p>分层的好处是：以后要加自动避障、视觉定位或自动驾驶，不需要把整个工程推倒重来，只需要在“应用层”或“控制层”增加模块。</p>
+<h3 id="1-2-硬件清单与各自职责">1.2 硬件清单与各自职责</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>设备</th>
+<th>作用</th>
+<th>本工程中的关键点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>STM32F407VET6</td>
+<td>主控，运行控制程序</td>
+<td>3.3V 逻辑；USART1/2/3；SWD 下载</td>
+</tr>
+<tr>
+<td>松甲四路编码器电机驱动模块（AT8236）</td>
+<td>接收四轮目标速度，驱动电机，读取编码器</td>
+<td>模块自己产生 PWM、完成速度闭环</td>
+</tr>
+<tr>
+<td>JGB37-520 电机 ×4</td>
+<td>执行转动</td>
+<td>12V，减速比 56</td>
+</tr>
+<tr>
+<td>80mm 麦轮 ×4</td>
+<td>把轮子转动变成全向移动</td>
+<td>左、右两侧辊轮互为镜像</td>
+</tr>
+<tr>
+<td>3S 锂电池</td>
+<td>系统能源</td>
+<td>资料标称 12.4V，满电约 12.6V</td>
+</tr>
+<tr>
+<td>稳压模块</td>
+<td>分出 12V/5V/3.3V</td>
+<td>多路输出；注意共地</td>
+</tr>
+<tr>
+<td>HC-04</td>
+<td>经典蓝牙 SPP + BLE</td>
+<td>本阶段用经典蓝牙 SPP 透传</td>
+</tr>
+<tr>
+<td>ST-Link</td>
+<td>下载和调试</td>
+<td>SWDIO/PA13、SWCLK/PA14、GND</td>
+</tr>
+<tr>
+<td>USB 转串口</td>
+<td>有线调试</td>
+<td>COM5，115200，8N1</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="1-3-电源和共地-这是最容易被忽略的安全问题">1.3 电源和共地：这是最容易被忽略的安全问题</h3>
+<p>电源关系可以画成：</p>
+<pre><code class="language-text">3S 电池
+  ├─ 稳压模块 12V → 驱动模块功率电源
+  ├─ 稳压模块 5V  → STM32 开发板
+  └─ 稳压模块 3.3V → HC-04 蓝牙
+       （也可以按实际模块，从 STM32 的 3V3 给 HC-04）
+
+所有设备的 GND —— 必须连在一起 —— 共地
+</code></pre>
+<p>必须记住：</p>
+<ol>
+<li><strong>GND 共地</strong>：STM32、驱动模块、HC-04、USB 转串口、稳压模块的 GND 要连在一起。没有共同参考地，串口字节会乱。</li>
+<li><strong>电压不能乱接</strong>：HC-04 的供电按模块要求使用 3.3V 或允许范围内电压；不要把 12V 直接接到 3.3V 逻辑设备。</li>
+<li><strong>驱动模块 UART 口的 5V 不要接到 STM32</strong>：只接 TX、RX、GND，避免倒灌。</li>
+<li><strong>第一次测试先架空轮子</strong>：让轮子离地，确认方向和计数，再放到地面。</li>
+<li><strong>开发板调试阶段优先用 ST-Link 供电</strong>：按你的要求，先只给开发板供电，确认程序正常，再接电机电源，降低烧板风险。</li>
+<li><strong>电池容量和放电倍率尚未最终确认</strong>：3S 电池能不能同时带动四个电机，要看容量、C 数和保护板；如果一加速就复位，优先怀疑电源跌落，而不是代码。</li>
+</ol>
+<h3 id="1-4-电源-逻辑电平和信号电平不是一回事">1.4 电源、逻辑电平和信号电平不是一回事</h3>
+<ul>
+<li><strong>电源</strong>：给设备提供能量，例如 12V、5V、3.3V；</li>
+<li><strong>逻辑电平</strong>：芯片判断“0/1”的电压范围，STM32 是 3.3V 逻辑；</li>
+<li><strong>信号</strong>：UART 的 TX/RX 上传输的字节波形。</li>
+</ul>
+<p>一个设备“有 5V 电源”不代表它的 UART 信号可以安全接 3.3V 芯片。本工程按资料确认 HC-04 逻辑电平为 3.3V，驱动模块串口也按 3.3V 逻辑处理；接线前仍要核对模块丝印和资料。</p>
+<hr>
+<h2 id="2-完整数据流-从电脑到四个轮子">2. 完整数据流：从电脑到四个轮子</h2>
+<h3 id="2-1-数据流总图">2.1 数据流总图</h3>
+<p><img alt="数据流图" src="assets/data_flow.svg"></p>
+<h3 id="2-2-手动遥控的正向链路">2.2 手动遥控的正向链路</h3>
+<p>以“电脑摇杆向前推”为例：</p>
+<pre><code class="language-text">① 上位机摇杆产生 vx、vy、wz
+   PC_上位机/ui/main_window.py
+   MainWindow._manual_tick()
+
+② 打包成二进制帧
+   PC_上位机/protocol.py
+   cmd_manual() → build_frame()
+
+③ 通过串口/蓝牙发出
+   PC_上位机/serial_worker.py
+   SerialWorker.send_frame()
+
+④ Windows 经典蓝牙 SPP
+   COM7（传出）或 COM8（传入）
+        ↓ 无线蓝牙
+⑤ HC-04 收到字节，从 TXD 送到 STM32 USART1_RX（PA10）
+
+⑥ STM32 逐字节解析
+   STM32_Project/CubeMX/MecanumCar/User/bsp_bluetooth.c
+   Bluetooth_OnRxByte()
+
+⑦ 校验通过后交给控制模式
+   control_mode.c
+   ControlMode_OnCommand()
+   指令 0x01 → 保存目标 vx/vy/wz，进入 MODE_MANUAL
+
+⑧ 20ms 控制周期
+   control_mode.c
+   ControlMode_Poll()
+   → RampToward() 做加速度平滑
+   → ControlMode_RunSpeedLoop()
+
+⑨ 麦轮逆运动学
+   chassis_control.c
+   Chassis_Inverse()
+   把车体速度变成 A/B/C/D 四个轮子的线速度
+
+⑩ 归一化并限幅
+   control_mode.c
+   g_wheel_target[i] = 轮速 / CFG_MAX_WHEEL_SPEED_M_S
+   再限幅到 -1.0～+1.0
+
+⑪ 发送给驱动模块
+   bsp_motor.c → Motor_SetSpeed()
+   driver_comm.c → DriverComm_SendCar()
+   串口文本：$Car:w1,w2,w3,w4!
+
+⑫ 驱动模块内部
+   接收目标速度 → 读取编码器 → 速度闭环 → 输出 PWM → H 桥 → 电机
+
+⑬ 四个轮子转动
+</code></pre>
+<p>关键点：<strong>STM32 发的是“目标速度”，不是直接发 PWM。</strong> 底层速度环在驱动模块内部，这是本工程当前的设计选择。</p>
+<h3 id="2-3-反馈链路-轮子实际转了多少">2.3 反馈链路：轮子实际转了多少</h3>
+<pre><code class="language-text">电机轴转动
+  ↓
+霍尔编码器产生 A/B 相脉冲
+  ↓
+驱动模块读取并累计编码器
+  ↓
+STM32 定时请求：
+  $MOTOR_4CH_READ:encoder_20ms!
+  $MOTOR_4CH_READ:encoder_total!
+  ↓
+driver_comm.c 解析文本回包
+  ↓
+bsp_encoder.c 把计数换算成速度/距离
+  ↓
+control_mode.c 组状态帧 0x81 和曲线帧 0x82
+  ↓
+bsp_bluetooth.c 从 USART1 发回 HC-04
+  ↓
+电脑串口接收、解析、显示曲线
+</code></pre>
+<h3 id="2-4-每一步落在哪个文件-哪个函数">2.4 每一步落在哪个文件、哪个函数</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>文件</th>
+<th>函数/代码</th>
+<th>发生什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>摇杆采样</td>
+<td><code>PC_上位机/ui/main_window.py</code></td>
+<td><code>_manual_tick()</code></td>
+<td>读取键盘/摇杆，形成 vx/vy/wz</td>
+</tr>
+<tr>
+<td>构造指令</td>
+<td><code>PC_上位机/protocol.py</code></td>
+<td><code>cmd_manual()</code>、<code>build_frame()</code></td>
+<td>小端打包，计算校验和</td>
+</tr>
+<tr>
+<td>串口发送</td>
+<td><code>PC_上位机/serial_worker.py</code></td>
+<td><code>SerialWorker.send_frame()</code></td>
+<td>写入 COM 口</td>
+</tr>
+<tr>
+<td>蓝牙透传</td>
+<td>HC-04</td>
+<td>硬件透传</td>
+<td>不解析内容，只转发字节</td>
+</tr>
+<tr>
+<td>帧解析</td>
+<td><code>bsp_bluetooth.c</code></td>
+<td><code>Bluetooth_OnRxByte()</code></td>
+<td>找 <code>AA 55</code>，读长度、指令、数据、校验</td>
+</tr>
+<tr>
+<td>指令分派</td>
+<td><code>control_mode.c</code></td>
+<td><code>ControlMode_OnCommand()</code></td>
+<td>根据 CMD 设置模式/参数</td>
+</tr>
+<tr>
+<td>周期控制</td>
+<td><code>control_mode.c</code></td>
+<td><code>ControlMode_Poll()</code></td>
+<td>20ms 一次，处理模式、请求反馈、发遥测</td>
+</tr>
+<tr>
+<td>运动学</td>
+<td><code>chassis_control.c</code></td>
+<td><code>Chassis_Inverse()</code></td>
+<td>车体速度 → 四轮线速度</td>
+</tr>
+<tr>
+<td>电机输出</td>
+<td><code>bsp_motor.c</code></td>
+<td><code>Motor_SetSpeed()</code></td>
+<td>限幅后调用驱动通信</td>
+</tr>
+<tr>
+<td>驱动通信</td>
+<td><code>driver_comm.c</code></td>
+<td><code>DriverComm_SendCar()</code></td>
+<td>拼 <code>$Car:...!</code> 文本</td>
+</tr>
+<tr>
+<td>编码器换算</td>
+<td><code>bsp_encoder.c</code></td>
+<td><code>Encoder_GetWheelSpeeds()</code></td>
+<td>20ms 计数 → m/s</td>
+</tr>
+<tr>
+<td>遥测</td>
+<td><code>control_mode.c</code></td>
+<td><code>ControlMode_SendStatus()</code>、<code>ControlMode_SendCurve()</code></td>
+<td>组 0x81/0x82</td>
+</tr>
+<tr>
+<td>上位机解析</td>
+<td><code>PC_上位机/protocol.py</code></td>
+<td><code>FrameParser.feed()</code>、<code>parse_status()</code></td>
+<td>还原模式、电压、编码器、速度</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="2-5-有线调试链路为什么也存在">2.5 有线调试链路为什么也存在</h3>
+<p>除了蓝牙，工程还有一条 USB 转串口调试链路：</p>
+<pre><code class="language-text">PC COM5（115200）
+  ↔ USB 转串口
+  ↔ STM32 USART3（PB10/PB11）
+</code></pre>
+<p><code>CFG_DEBUG_BRIDGE_ENABLE=1</code> 时，STM32 会把发给蓝牙的协议帧同时从 USART3 发出，方便你在没有蓝牙或蓝牙不稳定时，用有线串口观察数据。</p>
+<hr>
+<h2 id="3-硬件原理-电机-编码器-pwm-h-桥-麦轮">3. 硬件原理：电机、编码器、PWM、H 桥、麦轮</h2>
+<h3 id="3-1-直流减速电机">3.1 直流减速电机</h3>
+<p>JGB37-520 可以理解为：</p>
+<pre><code class="language-text">电机本体高速转动
+  ↓ 减速箱（56:1）
+输出轴低速、较大扭矩
+  ↓
+轮子转动
+</code></pre>
+<p>减速比 56 的意思是：电机内部转子转约 56 圈，输出轴才转 1 圈。它的好处是扭矩更大、速度更适合小车；代价是输出轴速度变慢。</p>
+<h3 id="3-2-编码器是什么">3.2 编码器是什么</h3>
+<p>编码器把“转了多少”变成电脉冲。本工程使用 AB 相增量式霍尔编码器：</p>
+<ul>
+<li>A 相：一路方波；</li>
+<li>B 相：另一路方波；</li>
+<li>A、B 有相位差，因此不仅能数脉冲，还能判断方向；</li>
+<li>电机转得越快，单位时间脉冲越多。</li>
+</ul>
+<p><img alt="编码器 A/B 相示意图" src="assets/encoder_ab.svg"></p>
+<h4 id="ppr-cpr-和-4-倍频">PPR、CPR 和 4 倍频</h4>
+<ul>
+<li><strong>PPR</strong>（Pulses Per Revolution）：编码器每转的脉冲数。你的电机资料给的是 11 PPR。</li>
+<li><strong>减速比</strong>：56。</li>
+<li><strong>4 倍频</strong>：A、B 两相的上升沿和下降沿都可以计数，因此一个周期能数到 4 个边沿。</li>
+</ul>
+<p>本工程当前使用的每输出轴转计数：</p>
+<pre><code class="language-text">CPR = 11 PPR × 56 减速比 × 4 倍频
+    = 2464 counts/rev
+</code></pre>
+<p><code>CFG_ENCODER_CPR = 2464.0f</code> 就是按这个公式得到的。</p>
+<blockquote>
+<p>【算法】这里的“4 倍频”不是魔法，而是利用 A/B 两相的 4 个边沿提高分辨率。实际计数会受模块内部解码方式、线序、干扰和轮子打滑影响，所以最终应以实测标定为准。</p>
+</blockquote>
+<h4 id="编码器方向">编码器方向</h4>
+<p>如果正转时计数增加，反转时计数减少，说明方向定义一致；如果相反，可能是：</p>
+<ul>
+<li>A/B 相接反；</li>
+<li>电机 M+/M- 接反；</li>
+<li>代码中的符号需要取反；</li>
+<li>机械安装方向与坐标定义相反。</li>
+</ul>
+<h3 id="3-3-pwm-和-h-桥">3.3 PWM 和 H 桥</h3>
+<h4 id="pwm">PWM</h4>
+<p>PWM（Pulse Width Modulation，脉宽调制）是快速开关电源的技术。可以把它想成“很快地开灯、关灯”：</p>
+<ul>
+<li>开的时间比例叫<strong>占空比</strong>；</li>
+<li>占空比越大，电机平均电压越高，转速通常越快；</li>
+<li>频率要足够高，避免电机发出明显啸叫或抖动。</li>
+</ul>
+<h4 id="h-桥">H 桥</h4>
+<p>H 桥由四个开关管组成，可以让电机：</p>
+<ul>
+<li>正转；</li>
+<li>反转；</li>
+<li>制动；</li>
+<li>停止。</li>
+</ul>
+<p>AT8236 是单通道 H 桥驱动器，四路模块内部有四个通道，分别驱动四个电机。</p>
+<blockquote>
+<p>本工程中 STM32 <strong>不直接生成 PWM</strong>。STM32 发送 <code>$Car</code> 目标速度，驱动模块内部完成 PWM 和速度闭环。这样做的优点是接线和代码简单，缺点是底层速度环参数由模块决定，STM32 不能直接调它的每个 PWM 细节。</p>
+</blockquote>
+<h3 id="3-4-麦轮为什么能全向移动">3.4 麦轮为什么能全向移动</h3>
+<p>普通轮子只能前进/后退；麦轮（Mecanum wheel）的轮毂周围有一圈斜向辊轮，四个轮子以特定方向组合转动时，可以产生：</p>
+<ul>
+<li>前进/后退；</li>
+<li>左右横移；</li>
+<li>原地旋转；</li>
+<li>斜向移动。</li>
+</ul>
+<p>本工程按以下布局理解：</p>
+<p><img alt="麦轮布局图" src="assets/mecanum_layout.svg"></p>
+<pre><code class="language-text">A 左前       B 右前
+C 左后       D 右后
+</code></pre>
+<p>你的实车已经确认：左侧前后轮辊轮方向一致，右侧前后轮方向一致，并且左右互为镜像（X 型布局）。这为横移和旋转提供了机械基础。</p>
+<blockquote>
+<p>仍然需要做“单轮方向测试”，因为“辊轮方向正确”不等于“电机正负方向、编码器方向、代码符号”三者已经一致。</p>
+</blockquote>
+<hr>
+<h2 id="4-通信-uart-蓝牙和协议">4. 通信：UART、蓝牙和协议</h2>
+<h3 id="4-1-uart-是什么">4.1 UART 是什么</h3>
+<p>UART（Universal Asynchronous Receiver/Transmitter，通用异步收发器）是一种常见的串口通信方式。双方约定：</p>
+<ul>
+<li>波特率：每秒传输多少位，例如 9600、115200；</li>
+<li>数据位：通常 8 位；</li>
+<li>校验位：通常无；</li>
+<li>停止位：通常 1 位。</li>
+</ul>
+<p>本工程写成的 <code>8N1</code> 就是：</p>
+<pre><code class="language-text">8 个数据位 + No parity（无校验）+ 1 个停止位
+</code></pre>
+<p>常见错误是“线接对了，但波特率不一致”，现象通常是：完全没数据，或者收到乱码。</p>
+<h3 id="4-2-三个串口的分工">4.2 三个串口的分工</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>STM32 串口</th>
+<th>引脚</th>
+<th>外设</th>
+<th>当前波特率</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>USART1</td>
+<td>PA9/PA10</td>
+<td>HC-04 蓝牙</td>
+<td>9600</td>
+<td>电脑/手机 ↔ STM32</td>
+</tr>
+<tr>
+<td>USART2</td>
+<td>PA2/PA3</td>
+<td>四路驱动模块</td>
+<td>115200</td>
+<td>STM32 ↔ 驱动模块</td>
+</tr>
+<tr>
+<td>USART3</td>
+<td>PB10/PB11</td>
+<td>USB 转串口</td>
+<td>115200</td>
+<td>有线调试/镜像观察</td>
+</tr>
+</tbody>
+</table></div>
+<p>注意：<code>config.h</code> 里虽然有 <code>CFG_DRIVER_BAUD</code> 和 <code>CFG_DEBUG_BAUD</code>，但当前 <code>usart.c</code> 中 USART2/USART3 仍然是硬编码 115200；只有 USART1 引用了 <code>CFG_BLUETOOTH_BAUD</code>。这是一个<strong>已知的代码一致性点</strong>，不要误以为改宏就一定会改变所有串口。</p>
+<h3 id="4-3-经典蓝牙-spp-与-ble-的区别">4.3 经典蓝牙 SPP 与 BLE 的区别</h3>
+<ul>
+<li><strong>经典蓝牙 SPP</strong>（Serial Port Profile）：把蓝牙模拟成串口。Windows 配对后会出现“传入/传出”COM 口。本阶段使用它。</li>
+<li><strong>BLE</strong>（Bluetooth Low Energy）：低功耗蓝牙，通信模型不是传统串口，需要 GATT 服务/特征值。HC-04 虽然支持双模，但本阶段不依赖 BLE。</li>
+<li>Windows 蓝牙设置中可能出现 COM7“传出”、COM8“传入”。不同软件的打开方式不同；如果连接成功但没有数据，首先核对上位机打开的是哪个口，以及驱动模块/固件是否真的在发数据。</li>
+</ul>
+<h3 id="4-4-二进制协议帧">4.4 二进制协议帧</h3>
+<p><img alt="协议帧结构图" src="assets/protocol_frame.svg"></p>
+<p>本工程 PC ↔ STM32 的帧格式：</p>
+<pre><code class="language-text">AA 55 LEN CMD DATA... CHECK
+</code></pre>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>字段</th>
+<th style="text-align: right;">长度</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AA 55</code></td>
+<td style="text-align: right;">2 字节</td>
+<td>帧头，告诉解析器“新帧开始”</td>
+</tr>
+<tr>
+<td><code>LEN</code></td>
+<td style="text-align: right;">1 字节</td>
+<td><code>CMD + DATA</code> 的总字节数</td>
+</tr>
+<tr>
+<td><code>CMD</code></td>
+<td style="text-align: right;">1 字节</td>
+<td>指令码</td>
+</tr>
+<tr>
+<td><code>DATA</code></td>
+<td style="text-align: right;">0～N 字节</td>
+<td>参数，按小端存放</td>
+</tr>
+<tr>
+<td><code>CHECK</code></td>
+<td style="text-align: right;">1 字节</td>
+<td><code>(LEN + CMD + 所有 DATA) &amp; 0xFF</code></td>
+</tr>
+</tbody>
+</table></div>
+<h4 id="为什么需要校验和">为什么需要校验和</h4>
+<p>无线蓝牙可能受干扰，串口也可能丢字节。校验和不能纠正错误，但能发现“这一帧可能坏了”，避免把坏数据当成速度指令执行。</p>
+<h4 id="一个具体例子">一个具体例子</h4>
+<p>发送“前进 1.0 m/s，vy=0，wz=0”：</p>
+<pre><code class="language-text">vx = 1.000 m/s → ×1000 = 1000 = 0x03E8
+小端存放：E8 03
+vy = 0 → 00 00
+wz = 0 → 00 00
+
+CMD = 01
+DATA = E8 03 00 00 00 00
+LEN = 1 + 6 = 07
+CHECK = (07 + 01 + E8 + 03 + 00 + 00 + 00 + 00) &amp; FF = F3
+
+完整帧：
+AA 55 07 01 E8 03 00 00 00 00 F3
+</code></pre>
+<h4 id="常见指令表">常见指令表</h4>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>CMD</th>
+<th>名称</th>
+<th>数据</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>0x01</code></td>
+<td>手动速度</td>
+<td>3 个 int16：vx、vy、wz，单位 0.001</td>
+<td>进入手动模式</td>
+</tr>
+<tr>
+<td><code>0x02</code></td>
+<td>急刹停</td>
+<td>无</td>
+<td>直接发零速度，模式回空闲</td>
+</tr>
+<tr>
+<td><code>0x03</code></td>
+<td>缓停</td>
+<td>1 字节减速档位</td>
+<td>目标速度逐步降为 0</td>
+</tr>
+<tr>
+<td><code>0x04</code></td>
+<td>位置 PID 停</td>
+<td>int16 目标距离 mm</td>
+<td>位置环走到目标附近</td>
+</tr>
+<tr>
+<td><code>0x05</code></td>
+<td>固定路线</td>
+<td>route_id + 边长单位</td>
+<td>当前固件 <code>route.c</code> 仍是占位实现</td>
+</tr>
+<tr>
+<td><code>0x06</code></td>
+<td>急停</td>
+<td>无</td>
+<td>立即清目标并停车</td>
+</tr>
+<tr>
+<td><code>0x08</code></td>
+<td>设置位置 PID</td>
+<td>Kp、Ki、Kd ×1000</td>
+<td>在线改参数</td>
+</tr>
+<tr>
+<td><code>0x09</code></td>
+<td>编码器清零</td>
+<td>无</td>
+<td>记录当前计数为零点</td>
+</tr>
+<tr>
+<td><code>0x0A</code></td>
+<td>心跳</td>
+<td>无</td>
+<td>返回 ACK</td>
+</tr>
+<tr>
+<td><code>0x0B</code></td>
+<td>读参数</td>
+<td>无</td>
+<td>返回 0x85 参数帧</td>
+</tr>
+<tr>
+<td><code>0x0C</code></td>
+<td>设置限幅</td>
+<td>最大线速度/角速度 ×1000</td>
+<td>运行期限幅</td>
+</tr>
+<tr>
+<td><code>0x0D</code></td>
+<td>原地旋转</td>
+<td>int16 角度，单位 0.1°</td>
+<td>正数左转，负数右转</td>
+</tr>
+<tr>
+<td><code>0x0E</code></td>
+<td>设置加速度</td>
+<td>线/角加速度 ×1000</td>
+<td>运行期平滑参数</td>
+</tr>
+</tbody>
+</table></div>
+<p>回报帧：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>CMD</th>
+<th>名称</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>0x81</code></td>
+<td>状态</td>
+<td>模式、电压、四轮累计计数、四轮实际速度</td>
+</tr>
+<tr>
+<td><code>0x82</code></td>
+<td>曲线</td>
+<td>四轮目标速度、四轮实际速度</td>
+</tr>
+<tr>
+<td><code>0x83</code></td>
+<td>ACK</td>
+<td>心跳/指令确认</td>
+</tr>
+<tr>
+<td><code>0x85</code></td>
+<td>参数</td>
+<td>当前 PID、限幅等</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="4-5-驱动模块文本协议">4.5 驱动模块文本协议</h3>
+<p>STM32 与四路驱动模块之间不是二进制帧，而是可读文本：</p>
+<pre><code class="language-text">$Car:0.300,0.300,0.300,0.300!
+$MOTOR_4CH_READ:encoder_20ms!
+$MOTOR_4CH_READ:encoder_total!
+$MOTOR_4CH_READ:battery!
+$MOTOR_PARAM:8,11,56!
+</code></pre>
+<p>要点：</p>
+<ul>
+<li>每个命令以 <code>$</code> 开头、以 <code>!</code> 结尾；</li>
+<li><code>$Car</code> 的四个数范围通常是 <code>-1.0～+1.0</code>；</li>
+<li><code>DriverComm_OnRxByte()</code> 按 <code>!</code> 切分一条响应；</li>
+<li>模块回包用 <code>sscanf</code> 解析成 <code>DriverComm_Data_t</code> 结构体；</li>
+<li>如果模块手册中的命令字、字段顺序或单位不同，必须以手册为准，不能只看代码猜。</li>
+</ul>
+<h3 id="4-6-帧解析状态机">4.6 帧解析状态机</h3>
+<p><img alt="协议状态机" src="assets/state_machine.svg"></p>
+<p>接收端不能假设“一次串口中断就收到完整一帧”。可能一次只来一个字节，也可能一帧被拆成很多次中断。因此代码用状态机：</p>
+<pre><code class="language-text">等待 AA → 等待 55 → 等待 LEN → 等待 CMD → 等待 DATA → 校验 → 交给控制层
+</code></pre>
+<p>这叫<strong>逐字节状态机</strong>。它的好处是：不需要知道数据什么时候到齐，来一个字节就推进一步。</p>
+<hr>
+<h2 id="5-控制算法-从-会转-到-可控">5. 控制算法：从“会转”到“可控”</h2>
+<blockquote>
+<p>本章所有标题带 <code>【算法】</code> 的内容，都是可以通过测试工程和上位机调试中心单独观察、单独调参的部分。</p>
+</blockquote>
+<h3 id="5-1-控制周期与实时性">5.1 控制周期与实时性</h3>
+<p><code>CFG_LOOP_MS = 20</code> 表示控制主循环每 20ms 执行一次，也就是约 50Hz：</p>
+<pre><code class="language-text">每 20ms：
+  请求一次编码器 20ms 计数
+  每 5 个周期请求一次累计计数（约 100ms）
+  每 50 个周期请求一次电池电压（约 1s）
+  根据当前模式计算一次输出
+  每 100ms 上报一次状态/曲线
+</code></pre>
+<p>为什么需要固定周期？</p>
+<ul>
+<li>PID 的积分和微分依赖时间；</li>
+<li>速度平滑按“每个周期的增量”计算；</li>
+<li>遥测曲线需要稳定的时间轴；</li>
+<li>主循环不能被长时间阻塞，否则控制会抖动。</li>
+</ul>
+<h3 id="5-2-开环与闭环">5.2 开环与闭环</h3>
+<ul>
+<li><strong>开环</strong>：只发目标，不检查实际结果。例如只发 <code>$Car:0.3,...</code> 而不看编码器。</li>
+<li><strong>闭环</strong>：测量实际值，和目标比较，再修正输出。</li>
+</ul>
+<p>本工程有两层闭环概念：</p>
+<pre><code class="language-text">外层：STM32 位置环（只用于 PID 精准停）
+内层：驱动模块速度环（$Car 的目标速度 → 编码器 → PWM）
+</code></pre>
+<p>这也是为什么 <code>0x07</code>（速度环 PID）在当前固件中是预留：速度环在模块内部，STM32 不直接调它。</p>
+<h3 id="5-3-算法-麦轮逆运动学">5.3 【算法】麦轮逆运动学</h3>
+<p>逆运动学的任务：</p>
+<blockquote>
+<p>已知车体想怎么动（vx、vy、wz），求四个轮子各应该转多快。</p>
+</blockquote>
+<p>代码中的公式：</p>
+<pre><code class="language-text">A = vx - vy - (a + b) × wz
+B = vx + vy + (a + b) × wz
+C = vx + vy - (a + b) × wz
+D = vx - vy + (a + b) × wz
+</code></pre>
+<p>其中：</p>
+<pre><code class="language-text">a = 轴距 / 2（米）
+b = 轮距 / 2（米）
+</code></pre>
+<p>本工程参数：</p>
+<pre><code class="language-text">轴距 = 130 mm → a = 0.065 m
+轮距 = 123.5 mm → b = 0.06175 m
+a + b = 0.12675 m
+</code></pre>
+<p>为什么会有加减号？</p>
+<ul>
+<li>前进时四个轮子同向；</li>
+<li>横移时左右两侧的轮子需要不同组合；</li>
+<li>旋转时左侧和右侧轮子方向相反；</li>
+<li><code>a+b</code> 体现轮子离车体中心的几何距离，距离越大，同样的角速度需要更大的轮速。</li>
+</ul>
+<blockquote>
+<p>这里的公式建立在特定的轮子编号、辊轮方向和坐标定义上。如果实车的 B/D 轮方向与代码假设相反，前进可能变成斜行，旋转可能方向错误。不要把公式当成“绝对真理”，要用单轮测试和整车测试验证。</p>
+</blockquote>
+<h3 id="5-4-算法-归一化与最小驱动">5.4 【算法】归一化与最小驱动</h3>
+<p>驱动模块的 <code>$Car</code> 接受 <code>-1.0～+1.0</code> 的归一化速度。STM32 的轮速是 <code>m/s</code>，所以需要：</p>
+<pre><code class="language-text">归一化轮速 = 轮子线速度 / CFG_MAX_WHEEL_SPEED_M_S
+</code></pre>
+<p>例如：</p>
+<pre><code class="language-text">CFG_MAX_WHEEL_SPEED_M_S = 1.0 m/s
+轮子目标 = 0.3 m/s
+→ $Car 目标 = 0.3
+</code></pre>
+<p>然后代码会做最小驱动处理：</p>
+<pre><code class="language-text">如果最大轮速的绝对值 &lt; CFG_MIN_DRIVE：
+    所有轮速按同一比例放大，使最大轮速达到 CFG_MIN_DRIVE
+</code></pre>
+<p>当前：</p>
+<pre><code class="language-text">CFG_MIN_DRIVE = 0.30
+</code></pre>
+<p>原因是低占空比时电机可能克服不了静摩擦，出现“嗡嗡响但不转”或“转一下停一下”。但放大最小驱动也有副作用：</p>
+<ul>
+<li>起步更猛；</li>
+<li>低速微调变粗；</li>
+<li>如果地面摩擦变化，可能仍然抖动。</li>
+</ul>
+<blockquote>
+<p>注意：这是“整体放大”，不是把每个轮子都强行设成 0.3；它保持四个轮子的比例关系，避免破坏运动方向。</p>
+</blockquote>
+<h3 id="5-5-算法-加速度平滑">5.5 【算法】加速度平滑</h3>
+<p><code>RampToward()</code> 的作用是让目标速度不要瞬间跳变：</p>
+<pre><code class="language-text">当前速度 → 每次靠近目标一点点 → 最终到达目标
+</code></pre>
+<p>每个 20ms 周期的最大变化量：</p>
+<pre><code class="language-text">线速度：CFG_ACCEL_V × 0.02 s
+角速度：CFG_ACCEL_W × 0.02 s
+</code></pre>
+<p>当前：</p>
+<pre><code class="language-text">CFG_ACCEL_V = 1.0 m/s²
+CFG_ACCEL_W = 3.0 rad/s²
+</code></pre>
+<p>如果从 0 加速到 1.0 m/s，理论上至少需要约 1 秒。这样电机不会“猛冲”，但也意味着响应变慢。</p>
+<h3 id="5-6-三种停止方式">5.6 三种停止方式</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>方式</th>
+<th>代码行为</th>
+<th>现象</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>急刹停</td>
+<td><code>Motor_Stop()</code> 发零速度，模式回 IDLE</td>
+<td>立即停，可能有惯性冲击</td>
+<td>紧急情况、测试</td>
+</tr>
+<tr>
+<td>缓停</td>
+<td><code>MODE_BRAKE_SOFT</code>，每 20ms 减 <code>CFG_SOFT_BRAKE_DECEL</code></td>
+<td>平滑减速</td>
+<td>正常停车</td>
+</tr>
+<tr>
+<td>PID 精准停</td>
+<td>位置环 + 编码器距离反馈</td>
+<td>走到指定距离后停</td>
+<td>需要位置精度的实验</td>
+</tr>
+</tbody>
+</table></div>
+<p>注意：本工程所说的“急刹”是让驱动模块目标速度归零，不是机械抱闸；轮子仍会因惯性滑行一小段。真正的机械刹车需要额外硬件。</p>
+<h3 id="5-7-算法-原地旋转与时间标定">5.7 【算法】原地旋转与时间标定</h3>
+<p>当前旋转不是角度闭环，而是<strong>时间控制</strong>：</p>
+<pre><code class="language-text">旋转时间 = |目标角度| / 90° × CFG_ROTATE_MS_PER_90
+</code></pre>
+<p>当前：</p>
+<pre><code class="language-text">CFG_ROTATE_MS_PER_90 = 900 ms
+CFG_ROTATE_DRIVE = 0.60
+</code></pre>
+<p>例如发送 45°，代码会让轮子以固定速度转约 450ms。问题是：</p>
+<ul>
+<li>电池电压变化会改变实际转速；</li>
+<li>地面摩擦、轮子打滑会改变角度；</li>
+<li>负载变化会改变减速；</li>
+<li>所以 900ms 只是一个可调起点，必须实测标定。</li>
+</ul>
+<p>标定流程：</p>
+<ol>
+<li>在轮子悬空或低摩擦场地先确认方向；</li>
+<li>发送 <code>rot90 0.6 900</code>；</li>
+<li>用手机水平仪/量角器/地面标记测量实际角度；</li>
+<li>若实际转了 80°，建议时间 = 900 × 90 / 80 ≈ 1013ms；</li>
+<li>把建议值写回 <code>CFG_ROTATE_MS_PER_90</code>；</li>
+<li>重新编译、烧录、复测 45° 和 90°。</li>
+</ol>
+<h3 id="5-8-算法-pid-位置环">5.8 【算法】PID 位置环</h3>
+<h4 id="pid-是什么">PID 是什么</h4>
+<p>PID 是 Proportional-Integral-Derivative 的缩写：</p>
+<pre><code class="language-text">输出 = Kp × 误差
+     + Ki × 误差积分
+     + Kd × 误差变化率
+</code></pre>
+<ul>
+<li><strong>P（比例）</strong>：误差越大，修正越猛；</li>
+<li><strong>I（积分）</strong>：长期存在的小误差会被累积，用来消除静差；</li>
+<li><strong>D（微分）</strong>：误差变化太快时给出阻尼，抑制超调。</li>
+</ul>
+<p><img alt="PID 框图" src="assets/pid_block.svg"></p>
+<h4 id="本工程的位置环">本工程的位置环</h4>
+<p>目标不是“轮子速度”，而是“车体前进到某个位置”：</p>
+<pre><code class="language-text">目标距离 = 起点距离 + 目标相对距离
+当前距离 = 四轮编码器距离的平均值
+误差 = 目标距离 - 当前距离
+PID 输出 = 期望车体速度 vx
+</code></pre>
+<p>然后这个 <code>vx</code> 再经过麦轮逆运动学和 <code>$Car</code> 发给驱动模块。</p>
+<h4 id="当前-pid-代码的三个细节">当前 PID 代码的三个细节</h4>
+<ol>
+<li>积分项累加 <code>error × dt</code>；</li>
+<li>积分做了限幅，防止积分饱和；</li>
+<li>微分项当前是 <code>Kd × (error - prev_error)</code>，<strong>没有除以 dt</strong>。</li>
+</ol>
+<p>这意味着：</p>
+<ul>
+<li><code>Ki</code>、<code>Kd</code> 的数值与 20ms 控制周期绑定；</li>
+<li>换控制周期后，同样的参数效果会变化；</li>
+<li>调参时不要盲目照搬别人的 Kp/Ki/Kd。</li>
+</ul>
+<h4 id="pid-调参顺序-位置环">PID 调参顺序（位置环）</h4>
+<ol>
+<li>先令 <code>Ki=0, Kd=0</code>；</li>
+<li>从小到大增加 <code>Kp</code>，直到能走到目标但略有超调；</li>
+<li>如果总是差一点到不了，少量增加 <code>Ki</code>；</li>
+<li>如果超调/来回摆，少量增加 <code>Kd</code> 或降低 <code>Kp</code>；</li>
+<li>每次只改一个参数，记录现象；</li>
+<li>用上位机“PID 调参”页和“PID 阶跃仿真”配合观察。</li>
+</ol>
+<h3 id="5-9-固定路线">5.9 固定路线</h3>
+<p>当前固定路线由<strong>上位机</strong>执行，基本序列是：</p>
+<pre><code class="language-text">前进 → 停顿 → 左转90° → 停顿
+  ↑                         ↓
+  └──── 重复 4 次（正方形）──┘
+</code></pre>
+<p>要点：</p>
+<ul>
+<li>路线是时间控制，不是每段都用编码器闭环；</li>
+<li>速度、边长、停顿时间都会影响实际轨迹；</li>
+<li>电池电压下降会让同样时间的行走距离变短；</li>
+<li>如果界面显示“到第三条边”但车还没走完，说明界面定时器/状态推进与实车运动不同步，需要检查路线状态机和定时器；</li>
+<li>固件 <code>route.c</code> 目前是空实现，<code>0x05</code> 不是当前 PC 路线的主路径。</li>
+</ul>
+<hr>
+<h2 id="6-软件结构与代码地图">6. 软件结构与代码地图</h2>
+<h3 id="6-1-目录总览">6.1 目录总览</h3>
+<pre><code class="language-text">蓝牙遥控麦轮小车/
+├─ STM32_Project/                 STM32 主工程
+│  ├─ CubeMX/MecanumCar/
+│  │  ├─ Core/                    CubeMX 生成的 HAL 初始化
+│  │  ├─ Drivers/                 ST 官方 HAL/CMSIS
+│  │  ├─ MDK-ARM/                 Keil 工程和编译输出
+│  │  └─ User/                    你写的用户代码
+│  └─ User/                       源码副本（需与上面同步）
+├─ Test_Project/                  独立测试/标定工程
+│  └─ MecanumTest/
+│     ├─ Test/                    测试命令和算法
+│     └─ MDK-ARM/                 Keil 测试工程
+├─ PC_上位机/                     PySide6 上位机
+│  ├─ ui/                         界面
+│  ├─ protocol.py                 协议
+│  ├─ serial_worker.py            串口线程
+│  └─ config.py                   上位机参数
+├─ diagrams/                      SVG 示意图和生成脚本
+├─ 01_接线图.md                   接线说明
+├─ 02_引脚分配表.md               引脚说明
+├─ 03_通信协议_v0.1.md            协议说明
+├─ 参数手册.md                    参数/标定手册
+├─ 代码地图.md                    文件级地图
+├─ Keil使用导航.md                Keil 操作教程
+└─ 工程只读分析报告.md            只读分析、风险、最小改动清单
+</code></pre>
+<h3 id="6-2-主固件用户层文件">6.2 主固件用户层文件</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>文件</th>
+<th>层</th>
+<th>一句话作用</th>
+<th>删掉会怎样</th>
+<th>关键技术</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>config.h</code></td>
+<td>配置层</td>
+<td>所有可调参数的集中入口</td>
+<td>所有模块找不到参数</td>
+<td>C 宏</td>
+</tr>
+<tr>
+<td><code>user_app.c/h</code></td>
+<td>应用入口</td>
+<td>初始化模块、启动接收中断、主循环</td>
+<td>没有初始化和主循环</td>
+<td>HAL UART 中断、回调</td>
+</tr>
+<tr>
+<td><code>bsp_bluetooth.c/h</code></td>
+<td>协议层</td>
+<td>PC ↔ STM32 的二进制帧收发</td>
+<td>蓝牙无法控制/回传</td>
+<td>状态机、校验和、UART</td>
+</tr>
+<tr>
+<td><code>control_mode.c/h</code></td>
+<td>控制决策层</td>
+<td>模式、平滑、位置 PID、旋转、遥测</td>
+<td>没有控制逻辑</td>
+<td>状态机、PID、斜坡</td>
+</tr>
+<tr>
+<td><code>chassis_control.c/h</code></td>
+<td>运动学层</td>
+<td>麦轮正/逆运动学</td>
+<td>车体速度无法变成四轮速度</td>
+<td>几何/线性关系</td>
+</tr>
+<tr>
+<td><code>bsp_motor.c/h</code></td>
+<td>执行器层</td>
+<td>四轮速度限幅并下发</td>
+<td>电机不会收到目标</td>
+<td>限幅、文本协议</td>
+</tr>
+<tr>
+<td><code>bsp_encoder.c/h</code></td>
+<td>传感器层</td>
+<td>计数→速度/距离、零点</td>
+<td>没有反馈</td>
+<td>单位换算、软件零点</td>
+</tr>
+<tr>
+<td><code>driver_comm.c/h</code></td>
+<td>驱动通信层</td>
+<td><code>$Car</code>、编码器、电压的文本协议</td>
+<td>STM32 与驱动模块断开</td>
+<td>UART、<code>sscanf</code></td>
+</tr>
+<tr>
+<td><code>pid.c/h</code></td>
+<td>算法层</td>
+<td>位置式 PID</td>
+<td>精准停无法闭环</td>
+<td>PID、积分限幅</td>
+</tr>
+<tr>
+<td><code>route.c/h</code></td>
+<td>路线层</td>
+<td>固件路线接口（当前空实现）</td>
+<td><code>0x05</code> 无实际动作；PC 路线仍可用</td>
+<td>状态机占位</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="6-3-cubemx-生成层文件">6.3 CubeMX 生成层文件</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>文件</th>
+<th>作用</th>
+<th>必要性</th>
+<th>技术</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Core/Src/main.c</code></td>
+<td>程序入口、时钟、初始化调用</td>
+<td>程序没有入口</td>
+<td>HAL、RCC/PLL</td>
+</tr>
+<tr>
+<td><code>Core/Src/usart.c</code></td>
+<td>USART1/2/3 初始化和引脚复用</td>
+<td>串口不能用</td>
+<td>HAL UART、GPIO AF</td>
+</tr>
+<tr>
+<td><code>Core/Src/stm32f4xx_it.c</code></td>
+<td>中断入口</td>
+<td>中断不触发</td>
+<td>NVIC、HAL IRQ</td>
+</tr>
+<tr>
+<td><code>Core/Src/gpio.c</code></td>
+<td>GPIO 初始化</td>
+<td>基础 GPIO 缺失</td>
+<td>HAL GPIO</td>
+</tr>
+<tr>
+<td><code>Core/Src/system_stm32f4xx.c</code></td>
+<td>CMSIS 系统初始化</td>
+<td>系统启动异常</td>
+<td>CMSIS</td>
+</tr>
+<tr>
+<td><code>Core/Inc/*.h</code></td>
+<td>声明和配置</td>
+<td>编译失败</td>
+<td>C 头文件</td>
+</tr>
+<tr>
+<td><code>Drivers/</code></td>
+<td>ST HAL/CMSIS 库</td>
+<td>HAL 函数找不到</td>
+<td>官方库</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote>
+<p>CubeMX 生成的文件是“基础工程”，不是本项目的算法核心。你可以先理解 <code>main.c</code> 的调用顺序，不需要一上来逐行读 HAL 库。</p>
+</blockquote>
+<h3 id="6-4-上位机文件">6.4 上位机文件</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>文件</th>
+<th>层</th>
+<th>作用</th>
+<th>关键技术</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>main.py</code></td>
+<td>启动</td>
+<td>创建 Qt 应用、窗口</td>
+<td>PySide6</td>
+</tr>
+<tr>
+<td><code>config.py</code></td>
+<td>配置</td>
+<td>串口、尺寸、协议码、颜色、默认参数</td>
+<td>Python 常量</td>
+</tr>
+<tr>
+<td><code>protocol.py</code></td>
+<td>协议</td>
+<td>组帧、解析、指令构造、回报解析</td>
+<td><code>struct</code>、状态机</td>
+</tr>
+<tr>
+<td><code>serial_worker.py</code></td>
+<td>通信</td>
+<td>后台串口读写，避免卡 UI</td>
+<td><code>QThread</code>、pyserial</td>
+</tr>
+<tr>
+<td><code>demo_worker.py</code></td>
+<td>演示</td>
+<td>无硬件时模拟数据</td>
+<td>定时器/模拟协议</td>
+</tr>
+<tr>
+<td><code>ui/main_window.py</code></td>
+<td>UI</td>
+<td>手动、路线、PID、曲线、调试中心、日志</td>
+<td>PySide6、pyqtgraph</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="6-5-核心函数讲解">6.5 核心函数讲解</h3>
+<h4 id="main-c-的-main"><code>main.c</code> 的 <code>main()</code></h4>
+<pre><code class="language-text">HAL_Init()
+  → 初始化 HAL
+SystemClock_Config()
+  → 配置 168MHz 时钟
+MX_GPIO_Init()
+MX_USART1_UART_Init()
+MX_USART2_UART_Init()
+MX_USART3_UART_Init()
+User_Init()
+  → 初始化驱动通信、协议、运动学、控制模式、接收中断、电机、编码器
+while (1)
+  → User_Loop()
+  → ControlMode_Poll()
+</code></pre>
+<h4 id="user_app-c-的-hal_uart_rxcpltcallback"><code>user_app.c</code> 的 <code>HAL_UART_RxCpltCallback()</code></h4>
+<p>这是 HAL 的“收到一个字节后回调”：</p>
+<pre><code class="language-text">USART1 收到字节 → Bluetooth_OnRxByte()
+USART2 收到字节 → DriverComm_OnRxByte()
+USART3 收到字节 → Bluetooth_OnRxByte()
+</code></pre>
+<p>每个分支处理完后都要重新调用 <code>HAL_UART_Receive_IT()</code>，否则只会收到第一个字节。这是初学者最常见的串口问题之一。</p>
+<h4 id="control_mode-c-的-controlmode_poll"><code>control_mode.c</code> 的 <code>ControlMode_Poll()</code></h4>
+<p>这是整个控制系统的“心跳”：</p>
+<pre><code class="language-text">时间到 20ms？
+  → 请求编码器
+  → 根据模式执行：
+       IDLE：停车
+       MANUAL：平滑 + 逆运动学 + $Car
+       BRAKE_SOFT：逐步减速
+       POS_STOP：位置 PID
+       ROTATE_ANGLE：定时旋转
+       ROUTE：路线状态机
+  → 每 100ms 发状态/曲线
+</code></pre>
+<h4 id="chassis_control-c-的-chassis_inverse"><code>chassis_control.c</code> 的 <code>Chassis_Inverse()</code></h4>
+<p>输入车体速度，输出四轮速度；这是麦轮“全向移动”的数学核心。必须配合正确的轮子编号、辊轮方向和符号。</p>
+<h4 id="bsp_encoder-c-的-encoder_getwheelspeeds"><code>bsp_encoder.c</code> 的 <code>Encoder_GetWheelSpeeds()</code></h4>
+<pre><code class="language-text">20ms 计数
+  → 除以 CPR 得到圈数
+  → 乘轮周长得到距离
+  → 除以 0.02s 得到 m/s
+</code></pre>
+<h4 id="driver_comm-c-的-drivercomm_onrxbyte"><code>driver_comm.c</code> 的 <code>DriverComm_OnRxByte()</code></h4>
+<p>按 <code>!</code> 切分完整文本包，再用 <code>sscanf</code> 解析。它不主动理解“车体速度”，只负责把模块回包变成结构体字段。</p>
+<h4 id="bsp_bluetooth-c-的-bluetooth_onrxbyte"><code>bsp_bluetooth.c</code> 的 <code>Bluetooth_OnRxByte()</code></h4>
+<p>逐字节找帧头、读长度、读数据、校验，最后调用 <code>ControlMode_OnCommand()</code>。它不知道什么是“麦轮”，只负责把完整指令交给控制层。</p>
+<h3 id="6-6-代码注释怎么读">6.6 代码注释怎么读</h3>
+<p>本工程的核心用户代码采用了“每行或每个关键语句配中文注释”的风格，例如：</p>
+<pre><code class="language-c">float a = CFG_WHEELBASE_MM / 2000.0f;   /* 半轴距：前后轴距/2，换算成米 */
+</code></pre>
+<p>读注释时不要只看“这行做了什么”，还要问三个问题：</p>
+<ol>
+<li><strong>输入是什么？</strong> 单位是什么？</li>
+<li><strong>输出是什么？</strong> 送给谁？</li>
+<li><strong>如果这行错了，实车会有什么现象？</strong></li>
+</ol>
+<p>例如 <code>CFG_WHEELBASE_MM</code> 如果误写成 1300，<code>a+b</code> 会变大，旋转和横移时轮速差会明显不对，但直线前进可能看起来仍然正常。这就是“参数错误不一定会让车完全不转”的原因。</p>
+<blockquote>
+<p>当前 CubeMX 自动生成的 HAL 文件保留了 ST 原始注释，不是每一行都有中文注释。后续如需严格满足“所有文件每行中文注释”，应在阶段 5 做一次专门的注释整理，而不是现在混在算法修改里。</p>
+</blockquote>
+<hr>
+<h2 id="7-参数中心-每一个能改的值">7. 参数中心：每一个能改的值</h2>
+<h3 id="7-1-三类参数">7.1 三类参数</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>类型</th>
+<th>在哪里</th>
+<th>改完要做什么</th>
+<th>例子</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>编译期参数</td>
+<td><code>config.h</code></td>
+<td>重新编译 + 烧录</td>
+<td>CPR、轮径、轴距、最小驱动</td>
+</tr>
+<tr>
+<td>运行期参数</td>
+<td>上位机 PID/调试中心</td>
+<td>点下发，掉电可能丢失</td>
+<td>位置 PID、限幅、加速度</td>
+</tr>
+<tr>
+<td>只读诊断</td>
+<td>状态栏、曲线、日志</td>
+<td>不改</td>
+<td>电压、编码器计数、当前模式</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="7-2-config-h-参数总表">7.2 <code>config.h</code> 参数总表</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>参数</th>
+<th style="text-align: right;">当前值</th>
+<th>单位</th>
+<th>影响</th>
+<th>改动后的现象</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>CFG_BLUETOOTH_BAUD</code></td>
+<td style="text-align: right;">9600</td>
+<td>bps</td>
+<td>USART1 与 HC-04 波特率</td>
+<td>不对则无数据/乱码</td>
+</tr>
+<tr>
+<td><code>CFG_DRIVER_BAUD</code></td>
+<td style="text-align: right;">115200</td>
+<td>bps</td>
+<td>注释上的驱动模块波特率</td>
+<td>当前 <code>usart.c</code> 仍硬编码，改宏不一定生效</td>
+</tr>
+<tr>
+<td><code>CFG_DEBUG_BAUD</code></td>
+<td style="text-align: right;">115200</td>
+<td>bps</td>
+<td>注释上的调试波特率</td>
+<td>当前 <code>usart.c</code> 仍硬编码</td>
+</tr>
+<tr>
+<td><code>CFG_WHEEL_DIAMETER_MM</code></td>
+<td style="text-align: right;">80.0</td>
+<td>mm</td>
+<td>轮速、距离、<code>$MOTOR_PARAM</code></td>
+<td>偏大/偏小导致距离和速度比例错</td>
+</tr>
+<tr>
+<td><code>CFG_WHEELBASE_MM</code></td>
+<td style="text-align: right;">130.0</td>
+<td>mm</td>
+<td>麦轮逆运动学</td>
+<td>旋转/横移轮速差不对</td>
+</tr>
+<tr>
+<td><code>CFG_TRACK_MM</code></td>
+<td style="text-align: right;">123.5</td>
+<td>mm</td>
+<td>麦轮逆运动学</td>
+<td>旋转/横移轮速差不对</td>
+</tr>
+<tr>
+<td><code>CFG_ENCODER_CPR</code></td>
+<td style="text-align: right;">2464.0</td>
+<td>counts/rev</td>
+<td>计数→圈数→速度/距离</td>
+<td>速度、距离、PID 全比例错</td>
+</tr>
+<tr>
+<td><code>CFG_MAX_SPEED_M_S</code></td>
+<td style="text-align: right;">1.0</td>
+<td>m/s</td>
+<td>手动 vx/vy 限幅</td>
+<td>太大失控，太小很肉</td>
+</tr>
+<tr>
+<td><code>CFG_MAX_OMEGA_RAD_S</code></td>
+<td style="text-align: right;">1.0</td>
+<td>rad/s</td>
+<td>手动 wz 限幅</td>
+<td>旋转过快/打滑</td>
+</tr>
+<tr>
+<td><code>CFG_MAX_WHEEL_SPEED_M_S</code></td>
+<td style="text-align: right;">1.0</td>
+<td>m/s</td>
+<td>轮速归一化</td>
+<td>归一化比例错，实际速度偏大/偏小</td>
+</tr>
+<tr>
+<td><code>CFG_MIN_DRIVE</code></td>
+<td style="text-align: right;">0.30</td>
+<td>归一化</td>
+<td>低速最小驱动</td>
+<td>太小震动，太大起步猛</td>
+</tr>
+<tr>
+<td><code>CFG_ACCEL_V</code></td>
+<td style="text-align: right;">1.0</td>
+<td>m/s²</td>
+<td>线速度平滑</td>
+<td>越大越急</td>
+</tr>
+<tr>
+<td><code>CFG_ACCEL_W</code></td>
+<td style="text-align: right;">3.0</td>
+<td>rad/s²</td>
+<td>角速度平滑</td>
+<td>越大旋转起停越急</td>
+</tr>
+<tr>
+<td><code>CFG_ROTATE_DRIVE</code></td>
+<td style="text-align: right;">0.60</td>
+<td>归一化</td>
+<td>原地旋转轮速</td>
+<td>太小不转/震动，太大过冲</td>
+</tr>
+<tr>
+<td><code>CFG_ROTATE_MS_PER_90</code></td>
+<td style="text-align: right;">900</td>
+<td>ms</td>
+<td>时间控制旋转角度</td>
+<td>角度偏大/偏小</td>
+</tr>
+<tr>
+<td><code>CFG_ROTATE_TOL_DEG</code></td>
+<td style="text-align: right;">2.0</td>
+<td>°</td>
+<td>注释上的到位容差</td>
+<td>当前未实际使用</td>
+</tr>
+<tr>
+<td><code>CFG_YAW_SIGN</code></td>
+<td style="text-align: right;">1.0</td>
+<td>—</td>
+<td>注释上的偏航方向</td>
+<td>当前未实际使用</td>
+</tr>
+<tr>
+<td><code>CFG_DEBUG_BRIDGE_ENABLE</code></td>
+<td style="text-align: right;">1</td>
+<td>—</td>
+<td>是否从 USART3 镜像协议帧</td>
+<td>0=关闭有线镜像</td>
+</tr>
+<tr>
+<td><code>CFG_LOOP_MS</code></td>
+<td style="text-align: right;">20</td>
+<td>ms</td>
+<td>控制周期</td>
+<td>改小更快但更吃 CPU/串口</td>
+</tr>
+<tr>
+<td><code>CFG_TELEMETRY_MS</code></td>
+<td style="text-align: right;">100</td>
+<td>ms</td>
+<td>状态/曲线上报周期</td>
+<td>改小曲线更密，串口压力更大</td>
+</tr>
+<tr>
+<td><code>CFG_POS_KP</code></td>
+<td style="text-align: right;">0.8</td>
+<td>—</td>
+<td>位置环比例</td>
+<td>大→更快但可能超调</td>
+</tr>
+<tr>
+<td><code>CFG_POS_KI</code></td>
+<td style="text-align: right;">0.0</td>
+<td>—</td>
+<td>位置环积分</td>
+<td>大→消静差但可能振荡</td>
+</tr>
+<tr>
+<td><code>CFG_POS_KD</code></td>
+<td style="text-align: right;">0.0</td>
+<td>—</td>
+<td>位置环微分</td>
+<td>大→阻尼但可能放大噪声</td>
+</tr>
+<tr>
+<td><code>CFG_SOFT_BRAKE_DECEL</code></td>
+<td style="text-align: right;">0.02</td>
+<td>m/s per 20ms</td>
+<td>缓停减速度</td>
+<td>大→停得快，小→停得慢</td>
+</tr>
+<tr>
+<td><code>CFG_ROUTE_SIDE_MM</code></td>
+<td style="text-align: right;">800</td>
+<td>mm</td>
+<td>注释上的路线边长</td>
+<td>当前 PC 路线不一定使用</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="7-3-control_mode-c-里的运行期变量">7.3 <code>control_mode.c</code> 里的运行期变量</h3>
+<p>这些变量不是宏，而是程序运行时保存的状态：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>变量</th>
+<th>作用</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>g_mode</code></td>
+<td>当前模式</td>
+<td>IDLE/MANUAL/BRAKE_SOFT/POS_STOP/ROUTE/ROTATE_ANGLE</td>
+</tr>
+<tr>
+<td><code>g_target_vx/vy/wz</code></td>
+<td>目标车体速度</td>
+<td>来自 0x01 指令</td>
+</tr>
+<tr>
+<td><code>g_ramp_vx/vy/wz</code></td>
+<td>平滑后的速度</td>
+<td>每个周期逐步靠近目标</td>
+</tr>
+<tr>
+<td><code>g_wheel_target[4]</code></td>
+<td>四轮归一化目标</td>
+<td>发给 <code>$Car</code></td>
+</tr>
+<tr>
+<td><code>g_wheel_actual[4]</code></td>
+<td>四轮实际线速度</td>
+<td>由编码器换算，用于上报</td>
+</tr>
+<tr>
+<td><code>g_pos_pid</code></td>
+<td>位置环 PID 状态</td>
+<td>Kp/Ki/Kd、积分、上次误差</td>
+</tr>
+<tr>
+<td><code>g_pos_start</code></td>
+<td>PID 停起点</td>
+<td>收到 0x04 时的平均距离</td>
+</tr>
+<tr>
+<td><code>g_pos_target</code></td>
+<td>目标相对距离</td>
+<td>0x04 的目标</td>
+</tr>
+<tr>
+<td><code>g_rotate_end_tick</code></td>
+<td>旋转结束时间</td>
+<td>HAL tick</td>
+</tr>
+<tr>
+<td><code>g_rotate_dir</code></td>
+<td>旋转方向</td>
+<td>+1 左转，-1 右转</td>
+</tr>
+<tr>
+<td><code>g_accel_v/w</code></td>
+<td>运行期加速度</td>
+<td>可被 0x0E 修改</td>
+</tr>
+<tr>
+<td><code>g_max_speed/omega</code></td>
+<td>运行期限幅</td>
+<td>可被 0x0C 修改</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="7-4-上位机-config-py-的关键值">7.4 上位机 <code>config.py</code> 的关键值</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>参数</th>
+<th style="text-align: right;">当前值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SERIAL_BAUDRATE</code></td>
+<td style="text-align: right;">9600</td>
+<td>默认蓝牙 SPP</td>
+</tr>
+<tr>
+<td><code>PORT_BAUDRATE</code></td>
+<td style="text-align: right;">COM5=115200</td>
+<td>有线调试</td>
+</tr>
+<tr>
+<td><code>DEFAULT_PORT</code></td>
+<td style="text-align: right;">COM7</td>
+<td>当前蓝牙传出端口</td>
+</tr>
+<tr>
+<td><code>TX_INTERVAL_MS</code></td>
+<td style="text-align: right;">50</td>
+<td>手动控制发送周期</td>
+</tr>
+<tr>
+<td><code>MAX_VX/MAX_VY</code></td>
+<td style="text-align: right;">1.0</td>
+<td>摇杆满量程对应 1.0 m/s</td>
+</tr>
+<tr>
+<td><code>MAX_WZ</code></td>
+<td style="text-align: right;">1.5</td>
+<td>旋转角速度上限</td>
+</tr>
+<tr>
+<td><code>MIN_DRIVE</code></td>
+<td style="text-align: right;">0.30</td>
+<td>与固件对应的显示/标定值</td>
+</tr>
+<tr>
+<td><code>DEFAULT_ROUTE_SIDE_MM</code></td>
+<td style="text-align: right;">800</td>
+<td>路线默认边长</td>
+</tr>
+<tr>
+<td><code>CURVE_MAX_POINTS</code></td>
+<td style="text-align: right;">400</td>
+<td>曲线缓存点数</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="7-5-改参数的顺序">7.5 改参数的顺序</h3>
+<ol>
+<li>先改 <code>config.h</code> 的机械参数（轮径、轴距、轮距、CPR）；</li>
+<li>重新编译主工程；</li>
+<li>烧录；</li>
+<li>用测试工程/调试中心做单轮、编码器、旋转标定；</li>
+<li>再改控制参数（最小驱动、加速度、PID）；</li>
+<li>每次只改一个参数，记录“改前/改后现象”；</li>
+<li>不要同时改代码、参数和接线，否则无法判断是谁造成的。</li>
+</ol>
+<hr>
+<h2 id="8-标定与实验流程">8. 标定与实验流程</h2>
+<h3 id="8-1-上电前的安全清单">8.1 上电前的安全清单</h3>
+<ul>
+<li>[ ] 电池未接、开关关闭；</li>
+<li>[ ] 所有 GND 共地；</li>
+<li>[ ] 驱动模块 UART 的 5V 未接；</li>
+<li>[ ] HC-04 供电电压正确；</li>
+<li>[ ] 电机插头插紧；</li>
+<li>[ ] 轮子架空；</li>
+<li>[ ] ST-Link/串口线不会碰到电机电源；</li>
+<li>[ ] 知道急停按钮/空格键在哪里。</li>
+</ul>
+<h3 id="8-2-实验-1-链路自检">8.2 实验 1：链路自检</h3>
+<ol>
+<li>开发板只由 ST-Link 供电；</li>
+<li>打开上位机，选择 COM7，9600；</li>
+<li>点“连接”；</li>
+<li>观察是否有 RX 字节、状态帧、心跳 ACK；</li>
+<li>若没有，先不要接电机电源。</li>
+</ol>
+<p>判断标准：</p>
+<ul>
+<li>有 RX 字节：至少物理链路有数据；</li>
+<li>有 0x81 状态帧：STM32 在正常发遥测；</li>
+<li>心跳有 0x83 ACK：协议和固件都在工作；</li>
+<li>只有 TX 没有 RX：优先查蓝牙端口/波特率/接线。</li>
+</ul>
+<h3 id="8-3-实验-2-单轮方向和编码器">8.3 实验 2：单轮方向和编码器</h3>
+<p>用测试工程或调试中心：</p>
+<pre><code class="language-text">wheel 0 0.3   → A 轮
+wheel 1 0.3   → B 轮
+wheel 2 0.3   → C 轮
+wheel 3 0.3   → D 轮
+</code></pre>
+<p>每次只转一个轮子，记录：</p>
+<ul>
+<li>轮子是否转；</li>
+<li>转向是否符合“前进正方向”；</li>
+<li>编码器计数是增加还是减少；</li>
+<li>是否有震动、停顿、异响。</li>
+</ul>
+<p>如果某个轮子反向，先确认是机械安装方向还是代码符号；不要同时改所有轮子。</p>
+<h3 id="8-4-实验-3-编码器-cpr-标定">8.4 实验 3：编码器 CPR 标定</h3>
+<ol>
+<li>架空或低速；</li>
+<li>发 <code>enczero</code> 清零；</li>
+<li>让车走一段已知距离（例如直线 1000mm）；</li>
+<li>记录四轮累计计数；</li>
+<li>用测试命令 <code>cpcal 1000</code> 或上位机调试中心计算；</li>
+<li>把建议 CPR 写回 <code>CFG_ENCODER_CPR</code>；</li>
+<li>重新烧录并复测。</li>
+</ol>
+<p>理论公式：</p>
+<pre><code class="language-text">CPR = 计数 × 轮周长 / 实际距离
+</code></pre>
+<p>如果计算出的 CPR 与 2464 差很多，优先检查：</p>
+<ul>
+<li>实际轮径；</li>
+<li>减速比；</li>
+<li>编码器线数；</li>
+<li>4 倍频假设；</li>
+<li>轮子打滑；</li>
+<li>编码器线序/丢脉冲。</li>
+</ul>
+<h3 id="8-5-实验-4-最小驱动">8.5 实验 4：最小驱动</h3>
+<p>从很小速度开始：</p>
+<pre><code class="language-text">min 0.10
+min 0.15
+min 0.20
+min 0.25
+min 0.30
+</code></pre>
+<p>记录“开始连续转、不明显震动”的最小值。当前 <code>CFG_MIN_DRIVE=0.30</code> 是经验起点，不是永久真理。</p>
+<h3 id="8-6-实验-5-旋转标定">8.6 实验 5：旋转标定</h3>
+<ol>
+<li>先确认左转/右转方向；</li>
+<li>发 <code>rot90 0.6 900</code>；</li>
+<li>量实际角度；</li>
+<li>用 <code>rotcal 实测角度</code> 得到建议时间；</li>
+<li>修改 <code>CFG_ROTATE_MS_PER_90</code>；</li>
+<li>复测 45°、90°、连续旋转。</li>
+</ol>
+<h3 id="8-7-实验-6-pid-位置停">8.7 实验 6：PID 位置停</h3>
+<ol>
+<li>先用 <code>pidstep</code> 在电脑上做仿真，理解 Kp/Ki/Kd 的影响；</li>
+<li>再在车上用低速度、短距离测试；</li>
+<li>先 P，后 I，最后 D；</li>
+<li>记录超调、到达时间、稳态误差；</li>
+<li>位置环输出的是速度，最终仍由驱动模块速度环执行。</li>
+</ol>
+<h3 id="8-8-实验-7-固定路线">8.8 实验 7：固定路线</h3>
+<ol>
+<li>先把边长设小（如 400～600mm）；</li>
+<li>速度设低（如 0.3～0.4）；</li>
+<li>停顿设 500ms；</li>
+<li>观察是否按“走一边→停→转→停”的顺序；</li>
+<li>记录实际轨迹和界面进度是否一致；</li>
+<li>如果界面跳步，先检查路线定时器和 <code>route_gen</code>，不要先改 PID。</li>
+</ol>
+<hr>
+<h2 id="9-故障排查树">9. 故障排查树</h2>
+<h3 id="9-1-蓝牙连接成功但没有数据">9.1 蓝牙连接成功但没有数据</h3>
+<p>按顺序查：</p>
+<pre><code class="language-text">1. 上位机打开的是 COM7 还是 COM8？
+2. 波特率是否 9600？
+3. HC-04 的 TXD/RXD 是否交叉接到 STM32？
+4. 是否共地？
+5. KEY 是否悬空/没有进入 AT 模式？
+6. STM32 是否真的在运行、是否烧了正确固件？
+7. USART1 初始化是否 9600？
+8. 用 COM5 有线调试是否能看到 0x81/0x82？
+</code></pre>
+<p>如果有线能看到数据、蓝牙看不到，问题更可能在蓝牙链路；如果两边都没有，问题更可能在固件/串口初始化。</p>
+<h3 id="9-2-电机不转">9.2 电机不转</h3>
+<pre><code class="language-text">1. 驱动模块 12V 是否有电？
+2. 电机插头是否插紧？
+3. `$Car` 是否真的发出？
+4. 速度是否低于最小驱动？
+5. 驱动模块是否收到正确的电机类型/参数？
+6. 是否处于 IDLE 或被急停覆盖？
+7. 单轮 `wheel` 能否转？
+</code></pre>
+<h3 id="9-3-轮子震动-转一下停一下">9.3 轮子震动、转一下停一下</h3>
+<p>优先怀疑：</p>
+<ul>
+<li>速度太低，低于静摩擦/驱动阈值；</li>
+<li><code>CFG_MIN_DRIVE</code> 太小；</li>
+<li>电源电流不足或电压跌落；</li>
+<li>编码器丢脉冲，速度环误判；</li>
+<li>轮子机械卡滞；</li>
+<li>驱动模块参数/电机类型不匹配。</li>
+</ul>
+<h3 id="9-4-编码器为-0-或方向相反">9.4 编码器为 0 或方向相反</h3>
+<ul>
+<li>检查 A/B 相线；</li>
+<li>检查编码器供电和 GND；</li>
+<li>检查插头接触；</li>
+<li>单轮手动转，观察计数；</li>
+<li>若计数反向，确认是编码器 A/B 反接还是电机方向反接；</li>
+<li>不要把“编码器反向”和“电机反向”混为一谈。</li>
+</ul>
+<h3 id="9-5-前进斜行-横移方向不对-旋转方向不对">9.5 前进斜行、横移方向不对、旋转方向不对</h3>
+<p>优先检查：</p>
+<ol>
+<li>四个轮子的实际位置是否与 A/B/C/D 对应；</li>
+<li>左右辊轮是否镜像；</li>
+<li>单轮正方向是否一致；</li>
+<li><code>CFG_WHEELBASE_MM</code>、<code>CFG_TRACK_MM</code> 是否量对；</li>
+<li><code>Chassis_Inverse()</code> 的符号是否与实车布局匹配；</li>
+<li>是否有某个轮子的 M+/M- 接反。</li>
+</ol>
+<h3 id="9-6-路线刚开始就跳到第三条边">9.6 路线刚开始就跳到第三条边</h3>
+<p>优先检查：</p>
+<ul>
+<li>上位机路线定时器是否重复启动；</li>
+<li><code>route_gen</code> 是否让旧定时器失效；</li>
+<li>路线步骤是否在“发送指令”时立刻推进，而不是等动作完成；</li>
+<li>是否有多个窗口/多个定时器同时运行；</li>
+<li>蓝牙延迟是否让状态反馈滞后。</li>
+</ul>
+<h3 id="9-7-pid-抖动或超调">9.7 PID 抖动或超调</h3>
+<ul>
+<li>Kp 太大：响应快但容易超调/振荡；</li>
+<li>Ki 太大：消静差但容易积分饱和；</li>
+<li>Kd 太大：对编码器噪声敏感；</li>
+<li>控制周期不稳定：PID 的 dt 不准；</li>
+<li>机械间隙/打滑：编码器看到“到了”，车体未必真的到了。</li>
+</ul>
+<h3 id="9-8-keil-编译-烧录问题">9.8 Keil 编译/烧录问题</h3>
+<p>参见 <code>Keil使用导航.md</code>。最常见的三类：</p>
+<ol>
+<li>编译器版本不对（AC5/AC6）；</li>
+<li>头文件路径没加；</li>
+<li>ST-Link/Flash 算法没配置好。</li>
+</ol>
+<hr>
+<h2 id="10-自测题-确认你真的理解了">10. 自测题：确认你真的理解了</h2>
+<h3 id="10-1-基础题">10.1 基础题</h3>
+<ol>
+<li><code>vx</code>、<code>vy</code>、<code>wz</code> 的正方向分别是什么？</li>
+<li>A/B/C/D 四个轮子分别在哪里？</li>
+<li>为什么所有设备必须共地？</li>
+<li>UART 的 9600 和 115200 分别用在哪条链路？</li>
+<li><code>$Car</code> 里的四个数字范围是什么？</li>
+</ol>
+<h3 id="10-2-协议题">10.2 协议题</h3>
+<ol>
+<li>一帧的六个部分是什么？</li>
+<li><code>LEN</code> 包含 CMD 吗？</li>
+<li>校验和怎么计算？</li>
+<li>为什么接收要用状态机，而不是假设一次收完？</li>
+<li>0x81 和 0x82 分别是什么？</li>
+</ol>
+<h3 id="10-3-算法-题">10.3 【算法】题</h3>
+<ol>
+<li>麦轮逆运动学中 <code>a+b</code> 代表什么？</li>
+<li>为什么旋转时左右轮方向相反？</li>
+<li><code>CFG_MIN_DRIVE</code> 为什么会影响低速抖动？</li>
+<li><code>RampToward</code> 和 PID 的区别是什么？</li>
+<li>PID 的 P、I、D 分别解决什么问题？</li>
+<li>为什么当前旋转是“时间控制”，不是“角度闭环”？</li>
+<li>如果实际转 80° 而目标是 90°，旋转时间应该变长还是变短？</li>
+</ol>
+<h3 id="10-4-排错题">10.4 排错题</h3>
+<ol>
+<li>蓝牙连接成功但 RX 一直是 0，你先查什么？</li>
+<li>单轮能转、四轮前进斜行，你先查什么？</li>
+<li>编码器计数为 0，但电机能转，你先查什么？</li>
+<li>路线界面跳步，但车还没走完，你先查什么？</li>
+<li>PID 停来回摆，你先改哪个参数？</li>
+</ol>
+<hr>
+<h2 id="11-目前不确定-需要实车确认的地方">11. 目前不确定、需要实车确认的地方</h2>
+<p>这一节不是“猜”，而是明确列出当前代码依赖但尚未最终验证的假设。后续每次实测后，应把结果补到这里。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>编号</th>
+<th>待确认项</th>
+<th>当前假设</th>
+<th>怎么确认</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>U1</td>
+<td>四个轮子位置</td>
+<td>A 左前、B 右前、C 左后、D 右后</td>
+<td>对照实车和模块座号</td>
+</tr>
+<tr>
+<td>U2</td>
+<td>辊轮方向</td>
+<td>左右镜像的 X 型布局</td>
+<td>看四个轮子辊轮排列，单轮测试</td>
+</tr>
+<tr>
+<td>U3</td>
+<td>电机正方向</td>
+<td><code>$Car</code> 正值按模块手册使车前进</td>
+<td>单轮 <code>wheel</code> + 四轮低速</td>
+</tr>
+<tr>
+<td>U4</td>
+<td>编码器方向</td>
+<td>正转计数增加</td>
+<td>手动正转/反转观察</td>
+</tr>
+<tr>
+<td>U5</td>
+<td>编码器倍频</td>
+<td>4 倍频，CPR=2464</td>
+<td>走已知距离，<code>cpcal</code> 实测</td>
+</tr>
+<tr>
+<td>U6</td>
+<td>轮径</td>
+<td>80mm</td>
+<td>卡尺量含胎面直径</td>
+</tr>
+<tr>
+<td>U7</td>
+<td>轴距/轮距</td>
+<td>130mm / 123.5mm</td>
+<td>量轮子中心距</td>
+</tr>
+<tr>
+<td>U8</td>
+<td>驱动模块协议</td>
+<td><code>$Car</code> 及回包格式如代码</td>
+<td>对照模块手册</td>
+</tr>
+<tr>
+<td>U9</td>
+<td>蓝牙端口</td>
+<td>COM7 传出、COM8 传入</td>
+<td>设备管理器 + 实际收发测试</td>
+</tr>
+<tr>
+<td>U10</td>
+<td>蓝牙模式</td>
+<td>经典 SPP 透明传输，KEY 悬空</td>
+<td>检查模块状态和 AT 设置</td>
+</tr>
+<tr>
+<td>U11</td>
+<td>电池能力</td>
+<td>能支撑四电机峰值电流</td>
+<td>看电池容量/C 数/保护板，实测电压跌落</td>
+</tr>
+<tr>
+<td>U12</td>
+<td>旋转方向</td>
+<td>正角度=左转</td>
+<td>发 45°/90° 观察</td>
+</tr>
+<tr>
+<td>U13</td>
+<td>最大轮速</td>
+<td>1.0 m/s</td>
+<td>单轮逐步加速，记录稳定上限</td>
+</tr>
+<tr>
+<td>U14</td>
+<td>路线同步</td>
+<td>PC 定时器与实际运动一致</td>
+<td>低速短路线实测</td>
+</tr>
+<tr>
+<td>U15</td>
+<td>速度环位置</td>
+<td>驱动模块内部完成</td>
+<td>对照模块手册和 <code>$Car</code> 行为</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote>
+<p>在这些项目确认前，不建议把“参数手册里的默认值”当成最终标定值。默认值只是让你能开始测试的起点。</p>
+</blockquote>
+<hr>
+<h2 id="12-最小改动清单-先不动源代码">12. 最小改动清单（先不动源代码）</h2>
+<blockquote>
+<p>详细版本见 <code>工程只读分析报告.md</code> 第 5 章。这里给出教学版摘要。</p>
+</blockquote>
+<h3 id="p0-先让蓝牙链路稳定">P0：先让蓝牙链路稳定</h3>
+<ul>
+<li>确认 COM7/COM8 哪个方向可用；</li>
+<li>确认 USART1=9600；</li>
+<li>确认 HC-04 TX/RX 交叉、共地；</li>
+<li>用 COM5 有线链路对照；</li>
+<li>确认固件确实在发 0x81/0x82。</li>
+</ul>
+<h3 id="p1-编码器标定">P1：编码器标定</h3>
+<ul>
+<li>单轮方向；</li>
+<li>走已知距离；</li>
+<li><code>cpcal</code> 计算 CPR；</li>
+<li>更新 <code>CFG_ENCODER_CPR</code>；</li>
+<li>复测速度/距离。</li>
+</ul>
+<h3 id="p2-旋转标定">P2：旋转标定</h3>
+<ul>
+<li>确认左/右转；</li>
+<li>量 90° 实际角度；</li>
+<li><code>rotcal</code> 计算时间；</li>
+<li>更新 <code>CFG_ROTATE_MS_PER_90</code>。</li>
+</ul>
+<h3 id="p3-路线同步">P3：路线同步</h3>
+<ul>
+<li>确认 PC 路线定时器不会重复推进；</li>
+<li>低速、短边、长停顿测试；</li>
+<li>暂不依赖固件 <code>route.c</code>。</li>
+</ul>
+<h3 id="p4-平滑和低速">P4：平滑和低速</h3>
+<ul>
+<li>调 <code>CFG_MIN_DRIVE</code>；</li>
+<li>调 <code>CFG_ACCEL_V/CFG_ACCEL_W</code>；</li>
+<li>观察起步、停车、震动。</li>
+</ul>
+<h3 id="p5-工程清理-暂不执行">P5：工程清理（暂不执行）</h3>
+<ul>
+<li>同步 <code>STM32_Project\User</code> 与 <code>STM32_Project\CubeMX\MecanumCar\User</code>；</li>
+<li>处理重复 <code>User\User</code> 目录；</li>
+<li>处理 <code>_*.py</code> 临时脚本；</li>
+<li>统一测试工程与主工程的 <code>config.h</code>。</li>
+</ul>
+<hr>
+<h2 id="13-专业术语表">13. 专业术语表</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>术语</th>
+<th>中文</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PWM</td>
+<td>脉宽调制</td>
+<td>用快速开关控制平均电压，从而控制电机速度</td>
+</tr>
+<tr>
+<td>H 桥</td>
+<td>H-Bridge</td>
+<td>四个开关组成的电机正反转驱动电路</td>
+</tr>
+<tr>
+<td>UART</td>
+<td>通用异步收发器</td>
+<td>常见串口通信方式</td>
+</tr>
+<tr>
+<td>bps</td>
+<td>比特每秒</td>
+<td>波特率的单位</td>
+</tr>
+<tr>
+<td>SPP</td>
+<td>串口端口协议</td>
+<td>经典蓝牙模拟串口</td>
+</tr>
+<tr>
+<td>BLE</td>
+<td>低功耗蓝牙</td>
+<td>另一种蓝牙通信模型</td>
+</tr>
+<tr>
+<td>PPR</td>
+<td>每转脉冲数</td>
+<td>编码器每转输出脉冲数</td>
+</tr>
+<tr>
+<td>CPR</td>
+<td>每转计数</td>
+<td>经过倍频/减速比后的每输出轴转计数</td>
+</tr>
+<tr>
+<td>4 倍频</td>
+<td>Quadrature ×4</td>
+<td>利用 A/B 相四个边沿提高计数分辨率</td>
+</tr>
+<tr>
+<td>正运动学</td>
+<td>Forward Kinematics</td>
+<td>四轮速度 → 车体速度</td>
+</tr>
+<tr>
+<td>逆运动学</td>
+<td>Inverse Kinematics</td>
+<td>车体速度 → 四轮速度</td>
+</tr>
+<tr>
+<td>PID</td>
+<td>比例-积分-微分</td>
+<td>一种反馈控制算法</td>
+</tr>
+<tr>
+<td>闭环</td>
+<td>Closed Loop</td>
+<td>测量实际值并修正</td>
+</tr>
+<tr>
+<td>开环</td>
+<td>Open Loop</td>
+<td>只发指令，不检查结果</td>
+</tr>
+<tr>
+<td>死区</td>
+<td>Deadband</td>
+<td>输入很小但执行器没有反应的区域</td>
+</tr>
+<tr>
+<td>积分饱和</td>
+<td>Integral Windup</td>
+<td>积分累积过大导致超调</td>
+</tr>
+<tr>
+<td>斜坡</td>
+<td>Ramp</td>
+<td>让目标值逐步变化，避免突变</td>
+</tr>
+<tr>
+<td>状态机</td>
+<td>State Machine</td>
+<td>用有限状态描述流程和切换条件</td>
+</tr>
+<tr>
+<td>校验和</td>
+<td>Checksum</td>
+<td>用简单求和检查数据是否可能出错</td>
+</tr>
+<tr>
+<td>小端</td>
+<td>Little Endian</td>
+<td>低位字节放在前面的存储方式</td>
+</tr>
+</tbody>
+</table></div>
+<hr>
+<h2 id="14-建议的下一步">14. 建议的下一步</h2>
+<p>本阶段的目标是“看懂并会动手”，不是一次性把所有参数调到完美。建议按下面顺序进行：</p>
+<ol>
+<li>先打开 <code>diagrams/system_architecture.svg</code> 和 <code>diagrams/data_flow.svg</code>，对照本手册第 1～2 章；</li>
+<li>打开 <code>Keil使用导航.md</code>，确认会编译、烧录、进入调试；</li>
+<li>按第 8 章做链路、单轮、编码器、最小驱动、旋转、PID、路线实验；</li>
+<li>每做完一个实验，把实测值写进 <code>参数手册.md</code> 的记录表；</li>
+<li>确认教学内容和实车现象一致后，再进入阶段 4：手机适配的离线可视化网站。</li>
+</ol>
+<blockquote>
+<p>阶段 4 网站会把这本手册变成可点击、可交互的页面：架构图、代码地图、参数中心、标定向导、麦轮运动学、PID 模拟器、协议实验室和故障排查。算法模块会统一带 <code>【算法】</code> 标记。</p>
+</blockquote>
+<hr>
+<h2 id="15-版本记录">15. 版本记录</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>日期</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2026-10-19</td>
+<td>阶段 3 教学手册初版：系统架构、数据流、硬件原理、协议、算法、代码地图、参数、标定、排错、术语和自测题</td>
+</tr>
+</tbody>
+</table></div>
+      <a class="to-top" href="#manual-top">回到顶部 ↑</a>
+    </article>
+  </div>
+</body>
+</html>

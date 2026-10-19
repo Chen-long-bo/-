@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (                 # 控件
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
     QLabel, QPushButton, QComboBox, QCheckBox, QGroupBox,
     QTabWidget, QPlainTextEdit, QSlider, QSpinBox, QDoubleSpinBox,
-    QLineEdit, QFrame, QSizePolicy, QMessageBox
+    QLineEdit, QFrame, QSizePolicy, QMessageBox, QScrollArea
 )
 import serial.tools.list_ports                  # 枚举串口
 import config                                   # 配置
@@ -67,6 +67,8 @@ class MainWindow(QMainWindow):
         self.last_rx_time = 0.0                           # 最近收到数据的时间
         self.rx_bytes = 0                                 # 累计接收字节数
         self.link_test_pending = False                    # 是否在等待链路测试ACK
+        self.last_status = None                           # 最近一次状态帧
+        self.calib_start_counts = None                    # 编码器标定起点计数
         self._build_ui()                                 # 构建界面
         self._refresh_ports()                            # 刷新串口
         self.timer = QTimer(self)                        # 手动控制定时器
@@ -91,6 +93,7 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self._build_route_tab(), "固定路线")      # 路线
         self.tabs.addTab(self._build_pid_tab(), "PID调参")         # PID
         self.tabs.addTab(self._build_curve_tab(), "数据曲线")      # 曲线
+        self.tabs.addTab(self._build_debug_tab(), "调试中心")      # 调试中心
         self.tabs.addTab(self._build_log_tab(), "日志")            # 日志
         self.tabs.addTab(self._build_placeholder("自动驾驶"), "自动驾驶")   # 预留
         self.tabs.addTab(self._build_placeholder("避障"), "避障")           # 预留
@@ -213,16 +216,6 @@ class MainWindow(QMainWindow):
         rg.addWidget(self.btn_stop_all, 3, 0, 1, 2)        # 加入
         right.addWidget(rot)                               # 加入
 
-        pos = QGroupBox("PID精准停")                        # 位置停组
-        pl = QHBoxLayout(pos)                              # 水平
-        self.spin_pid_mm = QSpinBox()                      # 距离输入
-        self.spin_pid_mm.setRange(-5000, 5000)             # 范围
-        self.spin_pid_mm.setValue(300)                     # 默认300mm
-        self.spin_pid_mm.setSuffix(" mm")                  # 单位
-        self.btn_pid_stop = QPushButton("开始精准停")       # 按钮
-        pl.addWidget(self.spin_pid_mm)                     # 加入
-        pl.addWidget(self.btn_pid_stop)                    # 加入
-        right.addWidget(pos)                               # 加入
         right.addStretch(1)                                # 弹簧
         layout.addLayout(right, 1)                         # 加入
         self.btn_rot_l45.clicked.connect(lambda: self._rotate_angle(45))    # 左45
@@ -232,7 +225,6 @@ class MainWindow(QMainWindow):
         self.btn_brake_fast.clicked.connect(lambda: self._special_send(protocol.cmd_brake_fast(), 0.6))   # 急刹
         self.btn_brake_soft.clicked.connect(lambda: self._special_send(protocol.cmd_brake_soft(), 0.6))   # 缓停
         self.btn_stop_all.clicked.connect(lambda: self._special_send(protocol.cmd_stop_all(), 0.6))       # 全停
-        self.btn_pid_stop.clicked.connect(self._on_pid_stop)   # 精准停
         return page                                       # 返回
 
     def _add_slider(self, grid, row, name, value, minimum, maximum):
@@ -397,6 +389,23 @@ class MainWindow(QMainWindow):
         h.addWidget(self.btn_pid_read)                    # 加入
         gl.addLayout(h, 5, 0, 1, 2)                       # 加入
         layout.addWidget(box)                             # 加入
+
+        pidtest = QGroupBox("【算法】位置环 PID 测试")      # PID测试组
+        pt = QHBoxLayout(pidtest)                          # 水平
+        self.spin_pid_mm = QSpinBox()                      # 距离输入
+        self.spin_pid_mm.setRange(-5000, 5000)             # 范围
+        self.spin_pid_mm.setValue(300)                     # 默认300mm
+        self.spin_pid_mm.setSuffix(" mm")                  # 单位
+        self.btn_pid_stop = QPushButton("开始 PID 测试")    # 测试按钮
+        self.btn_pid_stop.setObjectName("accent")          # 强调
+        pt.addWidget(self.spin_pid_mm)                     # 加入
+        pt.addWidget(self.btn_pid_stop)                    # 加入
+        layout.addWidget(pidtest)                          # 加入
+        note = QLabel("说明：这是位置环 PID 测试，不属于手动遥控。")   # 说明
+        note.setObjectName("sub")                          # 样式
+        layout.addWidget(note)                             # 加入
+        self.btn_pid_stop.clicked.connect(self._on_pid_stop)   # 测试
+
         smooth = QGroupBox("速度平滑（加速度限制）")        # 平滑组
         sg = QGridLayout(smooth)                          # 网格
         self.chk_smooth = QCheckBox("启用平滑（取消则急起急停）")   # 开关
@@ -445,6 +454,177 @@ class MainWindow(QMainWindow):
         self.curve_panel = CurvePanel()                   # 曲线面板
         layout.addWidget(self.curve_panel)                # 加入
         return page                                       # 返回
+
+    def _build_debug_tab(self):
+        """调试中心：链路、标定、点动、算法预览。"""
+        scroll = QScrollArea()                             # 滚动区
+        scroll.setWidgetResizable(True)                    # 自适应
+        page = QWidget()                                   # 页面
+        layout = QVBoxLayout(page)                         # 垂直布局
+        layout.setContentsMargins(16, 16, 16, 16)          # 边距
+        layout.setSpacing(12)                              # 间距
+
+        link = QGroupBox("【调试】链路状态")                # 链路组
+        ll = QVBoxLayout(link)                             # 布局
+        self.lbl_dbg_link = QLabel("未连接")               # 状态
+        self.lbl_dbg_rx = QLabel("RX: 0 bytes")           # 接收字节
+        ll.addWidget(self.lbl_dbg_link)                    # 加入
+        ll.addWidget(self.lbl_dbg_rx)                      # 加入
+        lh = QHBoxLayout()                                 # 按钮行
+        b_test = QPushButton("测试链路")                   # 测试
+        b_test.clicked.connect(self._link_test)            # 连接
+        b_heart = QPushButton("发送心跳")                  # 心跳
+        b_heart.clicked.connect(lambda: self._send(protocol.cmd_heartbeat()))   # 连接
+        lh.addWidget(b_test)                               # 加入
+        lh.addWidget(b_heart)                              # 加入
+        ll.addLayout(lh)                                   # 加入
+        layout.addWidget(link)                             # 加入页面
+
+        raw = QGroupBox("【调试】原始帧发送")              # 原始帧组
+        rl = QHBoxLayout(raw)                              # 水平
+        self.edit_raw = QLineEdit()                        # 输入框
+        self.edit_raw.setPlaceholderText("AA 55 01 0A 0B") # 提示
+        b_raw = QPushButton("发送十六进制")                # 发送
+        b_raw.clicked.connect(self._send_raw_frame)        # 连接
+        rl.addWidget(self.edit_raw)                        # 加入
+        rl.addWidget(b_raw)                                # 加入
+        layout.addWidget(raw)                              # 加入页面
+
+        cal = QGroupBox("【标定】编码器 CPR")               # 编码器标定
+        cl = QGridLayout(cal)                              # 网格
+        self.lbl_dbg_cpr = QLabel(f"当前 CPR: {config.ENCODER_CPR:.0f}")   # CPR
+        self.lbl_dbg_enc = QLabel("计数: --")              # 计数
+        cl.addWidget(self.lbl_dbg_cpr, 0, 0, 1, 2)         # 加入
+        cl.addWidget(self.lbl_dbg_enc, 1, 0, 1, 2)         # 加入
+        cl.addWidget(QLabel("实际行驶距离"), 2, 0)          # 标签
+        self.spin_calib_mm = QDoubleSpinBox()              # 距离
+        self.spin_calib_mm.setRange(10, 5000)              # 范围
+        self.spin_calib_mm.setDecimals(1)                  # 小数
+        self.spin_calib_mm.setValue(1000)                  # 默认
+        self.spin_calib_mm.setSuffix(" mm")                # 单位
+        cl.addWidget(self.spin_calib_mm, 2, 1)             # 加入
+        b_start = QPushButton("记录起点")                  # 起点
+        b_start.clicked.connect(self._calib_record_start)  # 连接
+        b_calc = QPushButton("记录终点并计算")             # 计算
+        b_calc.clicked.connect(self._calib_compute_cpr)    # 连接
+        cl.addWidget(b_start, 3, 0)                        # 加入
+        cl.addWidget(b_calc, 3, 1)                         # 加入
+        self.lbl_calib_result = QLabel("建议 CPR: --")     # 结果
+        self.lbl_calib_result.setObjectName("value")       # 样式
+        cl.addWidget(self.lbl_calib_result, 4, 0, 1, 2)    # 加入
+        layout.addWidget(cal)                              # 加入页面
+
+        rot = QGroupBox("【标定】原地旋转时间")            # 旋转标定
+        rl2 = QGridLayout(rot)                             # 网格
+        self.lbl_rot_result = QLabel(f"当前 90° 时间: {config.ROTATE_MS_PER_90} ms")   # 当前
+        rl2.addWidget(self.lbl_rot_result, 0, 0, 1, 2)     # 加入
+        rl2.addWidget(QLabel("实测角度"), 1, 0)             # 标签
+        self.spin_calib_deg = QDoubleSpinBox()             # 角度
+        self.spin_calib_deg.setRange(1, 360)               # 范围
+        self.spin_calib_deg.setDecimals(1)                 # 小数
+        self.spin_calib_deg.setValue(90)                   # 默认
+        self.spin_calib_deg.setSuffix(" °")                # 单位
+        rl2.addWidget(self.spin_calib_deg, 1, 1)           # 加入
+        b_90 = QPushButton("发送 90°")                     # 发送
+        b_90.clicked.connect(self._rotate_calib_send)      # 连接
+        b_calc2 = QPushButton("计算建议时间")              # 计算
+        b_calc2.clicked.connect(self._rotate_calib_compute) # 连接
+        rl2.addWidget(b_90, 2, 0)                          # 加入
+        rl2.addWidget(b_calc2, 2, 1)                       # 加入
+        layout.addWidget(rot)                              # 加入页面
+
+        mot = QGroupBox("【调试】运动点动（短脉冲 600ms）")   # 运动点动
+        ml = QGridLayout(mot)                              # 网格
+        self.btn_dbg_forward = QPushButton("前进")         # 前进
+        self.btn_dbg_back = QPushButton("后退")            # 后退
+        self.btn_dbg_left = QPushButton("左移")            # 左移
+        self.btn_dbg_right = QPushButton("右移")           # 右移
+        self.btn_dbg_rot_l = QPushButton("左转")           # 左转
+        self.btn_dbg_rot_r = QPushButton("右转")           # 右转
+        self.btn_dbg_forward.clicked.connect(lambda: self._pulse_motion(0.3, 0.0, 0.0, 600))   # 前进
+        self.btn_dbg_back.clicked.connect(lambda: self._pulse_motion(-0.3, 0.0, 0.0, 600))     # 后退
+        self.btn_dbg_left.clicked.connect(lambda: self._pulse_motion(0.0, 0.3, 0.0, 600))      # 左移
+        self.btn_dbg_right.clicked.connect(lambda: self._pulse_motion(0.0, -0.3, 0.0, 600))    # 右移
+        self.btn_dbg_rot_l.clicked.connect(lambda: self._pulse_motion(0.0, 0.0, 0.6, 600))     # 左转
+        self.btn_dbg_rot_r.clicked.connect(lambda: self._pulse_motion(0.0, 0.0, -0.6, 600))    # 右转
+        ml.addWidget(self.btn_dbg_forward, 0, 0)           # 加入
+        ml.addWidget(self.btn_dbg_back, 0, 1)              # 加入
+        ml.addWidget(self.btn_dbg_left, 1, 0)              # 加入
+        ml.addWidget(self.btn_dbg_right, 1, 1)             # 加入
+        ml.addWidget(self.btn_dbg_rot_l, 2, 0)             # 加入
+        ml.addWidget(self.btn_dbg_rot_r, 2, 1)             # 加入
+        layout.addWidget(mot)                              # 加入页面
+
+        geo = QGroupBox("【算法】麦轮逆运动学预览")        # 几何预览
+        gl = QGridLayout(geo)                              # 网格
+        gl.addWidget(QLabel("vx"), 0, 0)                   # 标签
+        self.spin_geo_vx = QDoubleSpinBox()                # vx
+        self.spin_geo_vx.setRange(-1.0, 1.0)               # 范围
+        self.spin_geo_vx.setDecimals(2)                    # 小数
+        self.spin_geo_vx.setValue(0.3)                     # 默认
+        gl.addWidget(self.spin_geo_vx, 0, 1)               # 加入
+        gl.addWidget(QLabel("vy"), 1, 0)                   # 标签
+        self.spin_geo_vy = QDoubleSpinBox()                # vy
+        self.spin_geo_vy.setRange(-1.0, 1.0)               # 范围
+        self.spin_geo_vy.setDecimals(2)                    # 小数
+        self.spin_geo_vy.setValue(0.0)                     # 默认
+        gl.addWidget(self.spin_geo_vy, 1, 1)               # 加入
+        gl.addWidget(QLabel("wz"), 2, 0)                   # 标签
+        self.spin_geo_wz = QDoubleSpinBox()                # wz
+        self.spin_geo_wz.setRange(-2.0, 2.0)               # 范围
+        self.spin_geo_wz.setDecimals(2)                    # 小数
+        self.spin_geo_wz.setValue(0.0)                     # 默认
+        gl.addWidget(self.spin_geo_wz, 2, 1)               # 加入
+        b_geo = QPushButton("计算四轮速度")                # 计算
+        b_geo.clicked.connect(self._geo_compute)           # 连接
+        gl.addWidget(b_geo, 3, 0, 1, 2)                    # 加入
+        self.lbl_geo = QLabel("A/B/C/D: --")               # 结果
+        self.lbl_geo.setObjectName("value")                # 样式
+        self.lbl_geo.setWordWrap(True)                     # 换行
+        gl.addWidget(self.lbl_geo, 4, 0, 1, 2)             # 加入
+        layout.addWidget(geo)                              # 加入页面
+
+        acc = QGroupBox("【算法】加速度平滑")              # 加速度组
+        al = QGridLayout(acc)                              # 网格
+        al.addWidget(QLabel("线加速度 m/s²"), 0, 0)        # 标签
+        self.spin_dbg_accel_v = QDoubleSpinBox()           # 线加速度
+        self.spin_dbg_accel_v.setRange(0.1, 5.0)           # 范围
+        self.spin_dbg_accel_v.setDecimals(2)               # 小数
+        self.spin_dbg_accel_v.setValue(config.ACCEL_V)     # 默认
+        al.addWidget(self.spin_dbg_accel_v, 0, 1)          # 加入
+        al.addWidget(QLabel("角加速度 rad/s²"), 1, 0)      # 标签
+        self.spin_dbg_accel_w = QDoubleSpinBox()           # 角加速度
+        self.spin_dbg_accel_w.setRange(0.5, 10.0)          # 范围
+        self.spin_dbg_accel_w.setDecimals(2)               # 小数
+        self.spin_dbg_accel_w.setValue(config.ACCEL_W)     # 默认
+        al.addWidget(self.spin_dbg_accel_w, 1, 1)          # 加入
+        b_acc = QPushButton("下发平滑参数")                # 下发
+        b_acc.clicked.connect(self._debug_accel_apply)     # 连接
+        al.addWidget(b_acc, 2, 0, 1, 2)                    # 加入
+        layout.addWidget(acc)                              # 加入页面
+
+        ov = QGroupBox("【参数】当前关键参数")              # 参数总览
+        ol = QVBoxLayout(ov)                               # 布局
+        text = (f"CPR: {config.ENCODER_CPR:.0f} counts/rev    "
+                f"轮径: {config.WHEEL_DIAMETER_MM:.1f} mm    "
+                f"轴距: {config.WHEELBASE_MM:.1f} mm    "
+                f"轮距: {config.TRACK_MM:.1f} mm\n"
+                f"最大 vx/vy: {config.MAX_VX:.2f} / {config.MAX_VY:.2f} m/s    "
+                f"最大 wz: {config.MAX_WZ:.2f} rad/s\n"
+                f"最小驱动: {config.MIN_DRIVE:.2f}    "
+                f"加速度: {config.ACCEL_V:.2f} / {config.ACCEL_W:.2f}    "
+                f"旋转轮速/90°时间: {config.ROTATE_DRIVE:.2f} / {config.ROTATE_MS_PER_90} ms\n"
+                f"位置 PID: Kp={config.DEFAULT_POS_KP:.2f} Ki={config.DEFAULT_POS_KI:.2f} "
+                f"Kd={config.DEFAULT_POS_KD:.2f}    位置停容差: {config.POS_STOP_TOL_MM:.1f} mm")
+        lbl_ov = QLabel(text)                              # 文本
+        lbl_ov.setObjectName("sub")                        # 样式
+        lbl_ov.setWordWrap(True)                           # 换行
+        ol.addWidget(lbl_ov)                               # 加入
+        layout.addWidget(ov)                               # 加入页面
+
+        layout.addStretch(1)                               # 弹簧
+        scroll.setWidget(page)                             # 设置页面
+        return scroll                                      # 返回
 
     def _build_log_tab(self):
         """日志Tab。"""
@@ -542,6 +722,8 @@ class MainWindow(QMainWindow):
         if ok:                                            # 已连接
             self.lbl_conn.setText(f"● {msg}")             # 显示
             self.lbl_conn.setStyleSheet("color:#00D1B2;") # 绿色
+            if hasattr(self, "lbl_dbg_link"):              # 调试中心存在
+                self.lbl_dbg_link.setText(f"● {msg}")      # 更新
             self.btn_connect.setText("断开")               # 按钮
             self.statusBar().showMessage(msg)             # 状态栏
             self.last_rx_time = time.time()               # 重置接收时间
@@ -551,12 +733,17 @@ class MainWindow(QMainWindow):
         else:                                             # 断开
             self.lbl_conn.setText(f"● {msg}")             # 显示
             self.lbl_conn.setStyleSheet("color:#FF5C6C;") # 红色
+            if hasattr(self, "lbl_dbg_link"):              # 调试中心存在
+                self.lbl_dbg_link.setText(f"● {msg}")      # 更新
             self.btn_connect.setText("连接")               # 按钮
         self._log(msg)                                    # 日志
 
     # ================= 数据回调 =================
     def _on_status(self, data):
         """状态帧回调。"""
+        self.last_status = data                           # 保存最近状态
+        if hasattr(self, "lbl_dbg_enc"):                  # 调试中心存在
+            self.lbl_dbg_enc.setText("计数: " + " / ".join(str(v) for v in data["enc"]))   # 更新计数
         names = {0: "空闲", 1: "手动", 2: "缓停", 3: "PID停", 4: "路线", 5: "旋转"}   # 模式名
         self.mode_name = names.get(data["mode"], "未知")   # 模式
         self.lbl_mode.setText(self.mode_name)             # 更新
@@ -590,6 +777,10 @@ class MainWindow(QMainWindow):
         self.last_rx_time = time.time()                   # 记录时间
         self.rx_bytes += n                                # 累加字节
         self.lbl_rx.setText(f"{self.rx_bytes} bytes")     # 显示
+        if hasattr(self, "lbl_dbg_rx"):                  # 调试中心存在
+            self.lbl_dbg_rx.setText(f"RX: {self.rx_bytes} bytes")   # 更新
+        if hasattr(self, "lbl_dbg_link"):                # 调试中心存在
+            self.lbl_dbg_link.setText("● 已连接（数据正常）")   # 更新
         if self.connected:                                # 已连接
             self.lbl_conn.setText("● 已连接（数据正常）")   # 绿色提示
             self.lbl_conn.setStyleSheet("color:#00D1B2;") # 绿色
@@ -601,6 +792,8 @@ class MainWindow(QMainWindow):
         if time.time() - self.last_rx_time > 1.5:         # 超过1.5秒没数据
             self.lbl_conn.setText("● 已连接（无数据）")     # 黄色提示
             self.lbl_conn.setStyleSheet("color:#FFC857;") # 黄色
+            if hasattr(self, "lbl_dbg_link"):              # 调试中心存在
+                self.lbl_dbg_link.setText("● 已连接（无数据）")   # 更新
         else:
             self.lbl_conn.setText("● 已连接（数据正常）")   # 绿色提示
             self.lbl_conn.setStyleSheet("color:#00D1B2;") # 绿色
@@ -662,6 +855,92 @@ class MainWindow(QMainWindow):
         """发送刹车/停止等特殊指令，并短暂暂停手动发送。"""
         self.manual_pause_until = time.time() + pause_s   # 暂停手动发送
         self._send(frame)                                 # 发送
+
+    def _send_raw_frame(self):
+        """发送输入的十六进制原始帧。"""
+        text = self.edit_raw.text().replace(" ", "").replace(",", "")   # 去掉空格/逗号
+        try:
+            data = bytes.fromhex(text)                     # 转字节
+        except ValueError:
+            self._log("原始帧格式错误，请输入十六进制，如 AA 55 01 0A 0B")
+            return
+        if not (self.worker and self.connected):           # 未连接
+            self._log("请先连接")
+            return
+        self.worker.send_frame(data)                       # 原样发送
+        self._log(f"原始帧已发送: {data.hex(' ').upper()}")
+
+    def _calib_record_start(self):
+        """记录编码器标定起点。"""
+        if not self.last_status:                           # 没有状态帧
+            self._log("还没有收到编码器数据，先连接并等待状态帧")
+            return
+        self.calib_start_counts = list(self.last_status["enc"])   # 保存起点
+        self._log(f"编码器起点: {self.calib_start_counts}")
+
+    def _calib_compute_cpr(self):
+        """根据实际距离计算建议 CPR。"""
+        if not self.calib_start_counts or not self.last_status:   # 缺数据
+            self._log("请先记录起点，并确认已收到终点状态帧")
+            return
+        end = self.last_status["enc"]                       # 终点计数
+        deltas = [end[i] - self.calib_start_counts[i] for i in range(4)]   # 四轮差值
+        avg = sum(deltas) / 4.0                             # 平均计数
+        dist_m = self.spin_calib_mm.value() / 1000.0        # 实际距离 m
+        circumference = math.pi * (config.WHEEL_DIAMETER_MM / 1000.0)   # 轮周长 m
+        if dist_m <= 0.001:                                 # 距离太小
+            self._log("实际距离太小，无法计算")
+            return
+        rev = dist_m / circumference                        # 输出轴转数
+        suggested = abs(avg) / rev if rev > 0 else 0.0      # 建议 CPR
+        self.lbl_calib_result.setText(f"建议 CPR: {suggested:.0f} counts/rev")
+        self._log(f"CPR 标定: 平均计数={avg:.1f}, 距离={dist_m:.3f}m, 建议 CPR={suggested:.0f}")
+
+    def _rotate_calib_send(self):
+        """发送一次 90° 旋转，供用户测量实际角度。"""
+        self._send(protocol.cmd_rotate(90))                 # 发送 90°
+        self._log("已发送左转90°，请测量实际转过的角度后填写")
+
+    def _rotate_calib_compute(self):
+        """根据实测角度计算建议 90° 时间。"""
+        measured = self.spin_calib_deg.value()              # 实测角度
+        if measured <= 0.1:                                 # 角度太小
+            self._log("实测角度必须大于 0")
+            return
+        suggested = config.ROTATE_MS_PER_90 * 90.0 / measured   # 按比例换算
+        self.lbl_rot_result.setText(f"建议 90° 时间: {suggested:.0f} ms")
+        self._log(f"旋转标定: 实测 {measured:.1f}°，建议 90° 时间 {suggested:.0f} ms")
+
+    def _pulse_motion(self, vx, vy, wz, ms=600):
+        """短脉冲运动：发一段速度，到时自动停。"""
+        if not (self.worker and self.connected):            # 未连接
+            self._log("请先连接")
+            return
+        self.manual_pause_until = time.time() + (ms / 1000.0) + 0.2   # 防止手动 tick 覆盖
+        self._send(protocol.cmd_manual(vx, vy, wz))         # 发送速度
+        QTimer.singleShot(ms, lambda: self._send(protocol.cmd_stop_all()))   # 到时停
+        self._log(f"点动: vx={vx} vy={vy} wz={wz}，{ms}ms")
+
+    def _geo_compute(self):
+        """本地预览麦轮逆运动学的四轮速度。"""
+        vx = self.spin_geo_vx.value()                       # 前后速度
+        vy = self.spin_geo_vy.value()                       # 左右速度
+        wz = self.spin_geo_wz.value()                       # 旋转速度
+        a = config.WHEELBASE_MM / 2000.0                    # 半轴距 m
+        b = config.TRACK_MM / 2000.0                        # 半轮距 m
+        lw = a + b                                          # 几何参数
+        w = [vx - vy - lw * wz,                             # A 左前
+             vx + vy + lw * wz,                             # B 右前
+             vx + vy - lw * wz,                             # C 左后
+             vx - vy + lw * wz]                             # D 右后
+        self.lbl_geo.setText("A/B/C/D: " + " / ".join(f"{x:.3f}" for x in w) + " m/s")
+        self._log(f"几何预览: {self.lbl_geo.text()}")
+
+    def _debug_accel_apply(self):
+        """下发调试中心的加速度平滑参数。"""
+        self._send(protocol.cmd_set_accel(self.spin_dbg_accel_v.value(),
+                                          self.spin_dbg_accel_w.value()))
+        self._log("调试中心：已下发加速度平滑参数")
 
     def _on_pid_stop(self):
         """PID精准停。"""

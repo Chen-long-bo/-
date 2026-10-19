@@ -22,4 +22,5 @@ mecanumtest/test_app.o: ..\Test\test_app.c ..\Core\Inc\main.h \
   ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_pwr_ex.h \
   ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_uart.h \
   ..\Test\test_app.h ..\Test\config.h ..\Test\driver_comm.h \
-  ..\Test\chassis_control.h ..\Test\bsp_encoder.h
+  ..\Test\chassis_control.h ..\Test\bsp_encoder.h ..\Test\debug_algo.h \
+  ..\Test\pid.h

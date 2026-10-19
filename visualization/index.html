@@ -1,0 +1,454 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090c10">
+  <meta name="description" content="蓝牙遥控麦轮小车离线可视化教学台：架构、代码地图、参数、标定、运动学、PID 和协议实验室。">
+  <title>麦轮实验室 · Mecanum Lab</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#overview" aria-label="返回总览">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span class="brand-text">
+          <strong>MECANUM / LAB</strong>
+          <small>蓝牙遥控麦轮小车 · 离线教学台</small>
+        </span>
+      </a>
+      <div class="topbar-status" aria-label="项目状态">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span>OFFLINE READY</span>
+        <span class="status-sep" aria-hidden="true"></span>
+        <span>STM32F407</span>
+      </div>
+      <button class="menu-toggle" id="menu-toggle" type="button" aria-expanded="false" aria-controls="side-nav">
+        <span></span><span></span><span></span>
+        <span class="sr-only">打开导航</span>
+      </button>
+    </header>
+
+    <aside class="side-nav" id="side-nav" aria-label="章节导航">
+      <div class="nav-label">系统导航</div>
+      <nav class="nav-list">
+        <a class="nav-link" href="#overview"><span>00</span>总览</a>
+        <a class="nav-link" href="#architecture"><span>01</span>架构与数据流</a>
+        <a class="nav-link" href="#code-map"><span>02</span>代码地图</a>
+        <a class="nav-link" href="#parameters"><span>03</span>参数中心</a>
+        <a class="nav-link" href="#calibration"><span>04</span>标定向导</a>
+        <a class="nav-link" href="#kinematics"><span>05</span>麦轮运动学</a>
+        <a class="nav-link" href="#pid"><span>06</span>PID 模拟</a>
+        <a class="nav-link" href="#protocol"><span>07</span>协议实验室</a>
+        <a class="nav-link" href="#troubleshooting"><span>08</span>故障排查</a>
+        <a class="nav-link" href="#manual"><span>09</span>教学手册</a>
+      </nav>
+      <div class="nav-foot">
+        <span class="mini-rule"></span>
+        <p>所有页面均可离线打开。数据只保存在本机浏览器。</p>
+      </div>
+    </aside>
+
+    <main id="main">
+      <section class="hero section" id="overview" aria-labelledby="overview-title">
+        <div class="hero-copy">
+          <p class="eyebrow">STM32F407 / HC-04 / FOUR-WHEEL MECANUM</p>
+          <h1 id="overview-title">把一台麦轮车<br><span class="display-outline">拆成可读的信号。</span></h1>
+          <p class="hero-lede">从电脑摇杆到四个轮子，从编码器计数到 PID 曲线。这里不是一张说明书，而是一张可以点、可以调、可以验证的工程地图。</p>
+          <div class="hero-actions">
+            <a class="button" href="#calibration">进入标定向导</a>
+            <a class="button ghost" href="manual.html">打开教学手册</a>
+          </div>
+          <div class="hero-metrics" aria-label="关键参数">
+            <div class="metric"><strong>4</strong><span>麦克纳姆轮</span></div>
+            <div class="metric"><strong>20<small>ms</small></strong><span>控制周期</span></div>
+            <div class="metric"><strong>9600</strong><span>蓝牙 SPP</span></div>
+            <div class="metric"><strong>2464</strong><span>CPR 起始值</span></div>
+          </div>
+        </div>
+
+        <div class="hero-board" aria-label="信号链示意图">
+          <div class="board-head">
+            <span>SIGNAL CHAIN / 01</span>
+            <span class="board-live"><i></i> LIVE MAP</span>
+          </div>
+          <div class="signal-chain">
+            <div class="signal-node"><b>PC</b><small>vx / vy / wz</small></div>
+            <div class="signal-link"><i></i></div>
+            <div class="signal-node accent"><b>HC-04</b><small>9600 baud</small></div>
+            <div class="signal-link"><i></i></div>
+            <div class="signal-node"><b>STM32</b><small>AA 55 frame</small></div>
+            <div class="signal-link"><i></i></div>
+            <div class="signal-node warm"><b>DRIVER</b><small>$Car</small></div>
+            <div class="signal-link"><i></i></div>
+            <div class="signal-node"><b>4× M</b><small>wheel speed</small></div>
+          </div>
+          <div class="vehicle-wrap">
+            <svg class="vehicle-sketch" viewBox="0 0 520 270" role="img" aria-label="麦轮车四轮布局示意图">
+              <defs>
+                <pattern id="hero-grid" width="26" height="26" patternUnits="userSpaceOnUse">
+                  <path d="M 26 0 L 0 0 0 26" fill="none" stroke="currentColor" stroke-opacity=".12" stroke-width="1"/>
+                </pattern>
+                <filter id="soft-glow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+              </defs>
+              <rect width="520" height="270" fill="url(#hero-grid)" opacity=".62"/>
+              <path d="M260 20v28M260 222v28M90 135h28M402 135h28" stroke="#6a7885" stroke-dasharray="3 6" stroke-width="1"/>
+              <rect x="162" y="58" width="196" height="154" rx="18" fill="#121920" stroke="#526270" stroke-width="1.5"/>
+              <rect x="186" y="76" width="148" height="118" rx="12" fill="none" stroke="#2d3b47" stroke-width="1"/>
+              <circle cx="260" cy="135" r="54" fill="none" stroke="#ffb45c" stroke-opacity=".3" stroke-dasharray="4 8"/>
+              <path d="M260 135l38-38" stroke="#ffb45c" stroke-width="2" filter="url(#soft-glow)"/>
+              <path d="M260 135l-34 25" stroke="#5cd6d0" stroke-width="2"/>
+              <text x="260" y="141" text-anchor="middle" fill="#e9eef2" font-size="13" font-family="Bahnschrift, Microsoft YaHei">BODY</text>
+              <g fill="#111820" stroke="#5cd6d0" stroke-width="2">
+                <rect x="126" y="70" width="26" height="52" rx="8"/><rect x="368" y="70" width="26" height="52" rx="8"/>
+                <rect x="126" y="148" width="26" height="52" rx="8"/><rect x="368" y="148" width="26" height="52" rx="8"/>
+              </g>
+              <g fill="#ffb45c" font-family="Cascadia Mono, Consolas" font-size="12">
+                <text x="104" y="64">A</text><text x="402" y="64">B</text><text x="104" y="220">C</text><text x="402" y="220">D</text>
+              </g>
+              <path d="M260 34l-7 10h14z" fill="#5cd6d0"/>
+              <text x="260" y="255" text-anchor="middle" fill="#7f8e9b" font-size="11" font-family="Microsoft YaHei">vx + 前进 · vy + 向左 · wz + 逆时针</text>
+            </svg>
+          </div>
+          <div class="board-foot">
+            <span>USB-LINK / COM5</span>
+            <span>HW / REV 0.1</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="architecture" aria-labelledby="architecture-title">
+        <div class="section-head">
+          <span class="section-index">01</span>
+          <div>
+            <p class="eyebrow">SYSTEM MAP</p>
+            <h2 id="architecture-title">系统不是一条线，而是两层闭环</h2>
+            <p>上层是 STM32 的位置决策，下层是驱动模块的速度执行。理解这两层，才能知道 PID 该调哪里、编码器数据为什么重要。</p>
+          </div>
+        </div>
+
+        <div class="split-grid">
+          <figure class="diagram-frame">
+            <img src="assets/system_architecture.svg" alt="系统架构图：电脑、蓝牙、STM32、驱动模块、电机与编码器分层">
+            <figcaption>系统架构 / 五层分工</figcaption>
+          </figure>
+          <div class="layer-stack">
+            <article class="layer-row">
+              <span class="layer-code">L5</span>
+              <div><h3>应用层</h3><p>PySide6 上位机、手机 SPP 串口助手。产生车体速度和调试命令。</p></div>
+            </article>
+            <article class="layer-row">
+              <span class="layer-code">L4</span>
+              <div><h3>通信层</h3><p>HC-04 透传、AA55 二进制帧、校验和、状态与曲线回传。</p></div>
+            </article>
+            <article class="layer-row">
+              <span class="layer-code">L3</span>
+              <div><h3>控制层</h3><p>模式状态机、加速度平滑、位置 PID、定时旋转与路线。</p></div>
+            </article>
+            <article class="layer-row">
+              <span class="layer-code">L2</span>
+              <div><h3>设备层</h3><p><code>$Car</code> 文本协议、四轮限幅、编码器 20ms 计数。</p></div>
+            </article>
+            <article class="layer-row">
+              <span class="layer-code">L1</span>
+              <div><h3>执行层</h3><p>AT8236 H 桥、PWM、电机、减速箱、麦轮、霍尔编码器。</p></div>
+            </article>
+          </div>
+        </div>
+
+        <div class="flow-panel">
+          <div class="panel-title"><span>DATA FLOW</span><span class="algo-badge">正向 + 反馈</span></div>
+          <figure class="diagram-frame compact">
+            <img src="assets/data_flow.svg" alt="从电脑指令到四个轮子，再通过编码器回到电脑的数据流图">
+          </figure>
+          <div class="flow-steps" role="list">
+            <div role="listitem"><b>01</b><span>摇杆采样</span><code>_manual_tick()</code></div>
+            <div role="listitem"><b>02</b><span>组帧发送</span><code>cmd_manual()</code></div>
+            <div role="listitem"><b>03</b><span>蓝牙透传</span><code>HC-04</code></div>
+            <div role="listitem"><b>04</b><span>帧解析</span><code>Bluetooth_OnRxByte()</code></div>
+            <div role="listitem"><b>05</b><span>逆运动学</span><code>Chassis_Inverse()</code></div>
+            <div role="listitem"><b>06</b><span>四轮闭环</span><code>$Car</code></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="code-map" aria-labelledby="code-title">
+        <div class="section-head">
+          <span class="section-index">02</span>
+          <div>
+            <p class="eyebrow">CODE ATLAS</p>
+            <h2 id="code-title">每个文件，都只回答一个问题</h2>
+            <p>从配置、协议、算法到执行器，点击筛选，看每个文件所处层级、存在理由和关键技术。</p>
+          </div>
+        </div>
+        <div class="filter-bar" role="group" aria-label="代码文件筛选">
+          <button class="filter-button is-active" type="button" data-code-filter="全部">全部</button>
+          <button class="filter-button" type="button" data-code-filter="应用">应用</button>
+          <button class="filter-button" type="button" data-code-filter="协议">协议</button>
+          <button class="filter-button" type="button" data-code-filter="算法">算法</button>
+          <button class="filter-button" type="button" data-code-filter="硬件">硬件</button>
+          <button class="filter-button" type="button" data-code-filter="上位机">上位机</button>
+        </div>
+        <div class="code-grid" id="code-grid" aria-live="polite"></div>
+      </section>
+
+      <section class="section" id="parameters" aria-labelledby="parameters-title">
+        <div class="section-head">
+          <span class="section-index">03</span>
+          <div>
+            <p class="eyebrow">PARAMETER CENTER</p>
+            <h2 id="parameters-title">参数不是数字，是现象</h2>
+            <p>搜索任何宏定义，查看当前值、单位、影响和调错后的表现。带 <span class="algo-badge inline">算法</span> 的项目需要实测标定。</p>
+          </div>
+        </div>
+        <div class="toolbar">
+          <label class="search-box" for="param-search">
+            <span class="search-icon" aria-hidden="true"></span>
+            <input id="param-search" type="search" placeholder="搜索 CFG_、PID、轮距、编码器…" autocomplete="off">
+          </label>
+          <span class="toolbar-note" id="param-count">显示全部参数</span>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="param-table">
+            <thead>
+              <tr><th scope="col">参数</th><th scope="col">当前值</th><th scope="col">单位</th><th scope="col">影响什么</th><th scope="col">调错后的现象</th></tr>
+            </thead>
+            <tbody id="param-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section" id="calibration" aria-labelledby="calibration-title">
+        <div class="section-head">
+          <span class="section-index">04</span>
+          <div>
+            <p class="eyebrow">CALIBRATION WIZARD</p>
+            <h2 id="calibration-title">先测，再改，再验证</h2>
+            <p>用实测距离反算 CPR，用实测旋转角反算 90° 时间。所有输入只保存在本机浏览器，不会上传。</p>
+          </div>
+        </div>
+
+        <div class="wizard-grid">
+          <div class="wizard-steps">
+            <article class="wizard-step is-current"><span>01</span><div><h3>清零点</h3><p>发 <code>enczero</code>，记录四轮平均累计计数为起点。</p></div></article>
+            <article class="wizard-step"><span>02</span><div><h3>走已知距离</h3><p>低速直线走 1000mm，避免打滑和急加速。</p></div></article>
+            <article class="wizard-step"><span>03</span><div><h3>反算 CPR</h3><p>建议 CPR = 计数 ÷ 圈数；圈数 = 距离 ÷ 轮周长。</p></div></article>
+            <article class="wizard-step"><span>04</span><div><h3>旋转标定</h3><p>实测 90° 的实际角度，反算新的时间常数。</p></div></article>
+          </div>
+
+          <div class="calibration-panel">
+            <div class="panel-title"><span>ENCODER / CPR</span><span class="algo-badge">算法</span></div>
+            <div class="form-grid">
+              <label>平均累计计数<input id="cal-counts" type="number" min="0" step="1" value="9800" inputmode="numeric"></label>
+              <label>实际距离 / mm<input id="cal-distance" type="number" min="1" step="1" value="1000" inputmode="decimal"></label>
+              <label>轮径 / mm<input id="cal-diameter" type="number" min="1" step="0.1" value="80" inputmode="decimal"></label>
+              <label>当前 CPR<input id="cal-current-cpr" type="number" min="1" step="1" value="2464" inputmode="decimal"></label>
+            </div>
+            <div class="calc-result" id="cpr-result" aria-live="polite">
+              <span>建议 CPR</span><strong>2464</strong><small>等待输入</small>
+            </div>
+            <div class="panel-divider"></div>
+            <div class="panel-title"><span>ROTATION / TIME</span><span class="algo-badge">算法</span></div>
+            <div class="form-grid">
+              <label>实测角度 / °<input id="cal-measured" type="number" min="0.1" step="0.1" value="85" inputmode="decimal"></label>
+              <label>当前 90° 时间 / ms<input id="cal-current-ms" type="number" min="1" step="1" value="900" inputmode="numeric"></label>
+            </div>
+            <div class="calc-result warm" id="rotate-result" aria-live="polite">
+              <span>建议 90° 时间</span><strong>953</strong><small>等待输入</small>
+            </div>
+            <p class="form-note">公式：新时间 = 当前时间 × 90 ÷ 实测角度。结果只是起点，最终以复测为准。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="kinematics" aria-labelledby="kinematics-title">
+        <div class="section-head">
+          <span class="section-index">05</span>
+          <div>
+            <p class="eyebrow">MECANUM KINEMATICS</p>
+            <h2 id="kinematics-title">车体想怎么动，轮子各转多快</h2>
+            <p>拖动三个滑杆，观察 A/B/C/D 四轮目标速度。带 <span class="algo-badge inline">算法</span> 的公式来自 <code>Chassis_Inverse()</code>。</p>
+          </div>
+        </div>
+
+        <div class="kinematics-grid">
+          <div class="control-panel">
+            <div class="slider-row"><label for="kin-vx">vx 前后</label><output id="kin-vx-out">0.00</output><input id="kin-vx" type="range" min="-1" max="1" step="0.01" value="0"></div>
+            <div class="slider-row"><label for="kin-vy">vy 左右</label><output id="kin-vy-out">0.00</output><input id="kin-vy" type="range" min="-1" max="1" step="0.01" value="0"></div>
+            <div class="slider-row"><label for="kin-wz">wz 旋转</label><output id="kin-wz-out">0.00</output><input id="kin-wz" type="range" min="-1.5" max="1.5" step="0.01" value="0"></div>
+            <div class="formula-block">
+              <span>INVERSE KINEMATICS</span>
+              <code>A = vx − vy − (a+b)·wz</code>
+              <code>B = vx + vy + (a+b)·wz</code>
+              <code>C = vx + vy − (a+b)·wz</code>
+              <code>D = vx − vy + (a+b)·wz</code>
+              <small>a+b = 0.12675 m（轴距 130mm / 轮距 123.5mm）</small>
+            </div>
+          </div>
+
+          <div class="kinematics-visual">
+            <svg viewBox="0 0 520 350" role="img" aria-label="四轮目标速度可视化">
+              <defs>
+                <linearGradient id="bar-fill" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#5cd6d0"/><stop offset="1" stop-color="#ffb45c"/></linearGradient>
+              </defs>
+              <rect x="130" y="58" width="260" height="218" rx="20" fill="#10161d" stroke="#3a4854"/>
+              <text x="260" y="174" text-anchor="middle" fill="#80909d" font-family="Cascadia Mono, Consolas" font-size="12">BODY</text>
+              <g class="wheel-visual" id="wheel-a"><rect x="90" y="85" width="28" height="68" rx="10"/><text x="104" y="76">A</text><text x="104" y="174" class="wheel-value">0.00</text></g>
+              <g class="wheel-visual" id="wheel-b"><rect x="402" y="85" width="28" height="68" rx="10"/><text x="416" y="76">B</text><text x="416" y="174" class="wheel-value">0.00</text></g>
+              <g class="wheel-visual" id="wheel-c"><rect x="90" y="185" width="28" height="68" rx="10"/><text x="104" y="276">C</text><text x="104" y="170" class="wheel-value">0.00</text></g>
+              <g class="wheel-visual" id="wheel-d"><rect x="402" y="185" width="28" height="68" rx="10"/><text x="416" y="276">D</text><text x="416" y="170" class="wheel-value">0.00</text></g>
+              <path class="motion-arrow" id="motion-arrow" d="M260 166l0-26" marker-end="url(#arrowhead)"/>
+              <defs><marker id="arrowhead" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0 0L8 4L0 8z" fill="#5cd6d0"/></marker></defs>
+              <text x="260" y="304" text-anchor="middle" fill="#73828e" font-size="11" font-family="Microsoft YaHei">向上 = 正值 · 向下 = 负值</text>
+            </svg>
+            <div class="wheel-bars" id="wheel-bars" aria-label="四轮归一化目标速度"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="pid" aria-labelledby="pid-title">
+        <div class="section-head">
+          <span class="section-index">06</span>
+          <div>
+            <p class="eyebrow">PID WORKBENCH</p>
+            <h2 id="pid-title">把“停得准”拆成 P、I、D 三条力</h2>
+            <p>这是一个近似位置环仿真，用于理解趋势，不替代实车标定。曲线显示位置随时间的响应。</p>
+          </div>
+        </div>
+
+        <div class="pid-grid">
+          <div class="sim-controls">
+            <div class="slider-row"><label for="pid-kp">Kp 比例</label><output id="pid-kp-out">0.80</output><input id="pid-kp" type="range" min="0" max="3" step="0.01" value="0.8"></div>
+            <div class="slider-row"><label for="pid-ki">Ki 积分</label><output id="pid-ki-out">0.00</output><input id="pid-ki" type="range" min="0" max="1" step="0.01" value="0"></div>
+            <div class="slider-row"><label for="pid-kd">Kd 微分</label><output id="pid-kd-out">0.00</output><input id="pid-kd" type="range" min="0" max="1" step="0.01" value="0"></div>
+            <div class="slider-row"><label for="pid-target">目标距离 / mm</label><output id="pid-target-out">500</output><input id="pid-target" type="range" min="100" max="1000" step="10" value="500"></div>
+            <div class="button-row">
+              <button class="button" type="button" id="pid-run">重新仿真</button>
+              <button class="button ghost" type="button" id="pid-reset">恢复默认</button>
+            </div>
+            <div class="pid-legend"><span class="legend-line target"></span>目标 <span class="legend-line actual"></span>实际位置</div>
+          </div>
+          <div class="chart-panel">
+            <div class="panel-title"><span>POSITION RESPONSE</span><span class="algo-badge">算法</span></div>
+            <canvas id="pid-chart" width="880" height="360" aria-label="PID 位置响应曲线"></canvas>
+            <div class="pid-stats" id="pid-stats" aria-live="polite"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="protocol" aria-labelledby="protocol-title">
+        <div class="section-head">
+          <span class="section-index">07</span>
+          <div>
+            <p class="eyebrow">PROTOCOL LAB</p>
+            <h2 id="protocol-title">每一帧，都能被拆开检查</h2>
+            <p>选择指令、填入参数，生成 <code>AA 55 LEN CMD DATA CHECK</code> 帧；也可以粘贴十六进制数据反向解析。</p>
+          </div>
+        </div>
+
+        <div class="protocol-grid">
+          <div class="protocol-builder">
+            <div class="panel-title"><span>FRAME BUILDER</span><span class="algo-badge">算法 · 校验和</span></div>
+            <label class="select-label">指令
+              <select id="proto-command">
+                <option value="manual">0x01 手动速度</option>
+                <option value="brake-fast">0x02 急刹停</option>
+                <option value="brake-soft">0x03 缓停</option>
+                <option value="pid-stop">0x04 位置 PID 停</option>
+                <option value="rotate">0x0D 原地旋转</option>
+                <option value="heartbeat">0x0A 心跳</option>
+                <option value="stop">0x06 急停</option>
+                <option value="accel">0x0E 设置加速度</option>
+              </select>
+            </label>
+            <div id="proto-fields" class="form-grid protocol-fields"></div>
+            <div class="button-row">
+              <button class="button" type="button" id="proto-build">生成帧</button>
+              <button class="button ghost" type="button" id="proto-preset">载入示例</button>
+            </div>
+            <div class="code-output-label">FRAME / HEX</div>
+            <pre class="code-output" id="proto-output">AA 55 07 01 E8 03 00 00 00 00 F3</pre>
+            <button class="text-button" type="button" id="proto-copy">复制十六进制</button>
+          </div>
+
+          <div class="protocol-parser">
+            <div class="panel-title"><span>FRAME PARSER</span><span class="algo-badge">算法 · 状态机</span></div>
+            <label class="select-label">粘贴十六进制
+              <textarea id="proto-input" rows="4" spellcheck="false">AA 55 07 01 E8 03 00 00 00 00 F3</textarea>
+            </label>
+            <button class="button" type="button" id="proto-parse">解析帧</button>
+            <div class="parse-result" id="proto-parse-result" aria-live="polite"></div>
+            <figure class="diagram-frame tiny">
+              <img src="assets/protocol_frame.svg" alt="协议帧结构示意图">
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="troubleshooting" aria-labelledby="troubleshooting-title">
+        <div class="section-head">
+          <span class="section-index">08</span>
+          <div>
+            <p class="eyebrow">FAULT TREE</p>
+            <h2 id="troubleshooting-title">先定位层，再换零件</h2>
+            <p>不要同时改代码、参数和接线。按“链路 → 传感 → 执行 → 算法”的顺序缩小范围。</p>
+          </div>
+        </div>
+        <div class="trouble-list" id="trouble-list"></div>
+      </section>
+
+      <section class="section manual-section" id="manual" aria-labelledby="manual-title">
+        <div class="section-head">
+          <span class="section-index">09</span>
+          <div>
+            <p class="eyebrow">FIELD MANUAL</p>
+            <h2 id="manual-title">把原理带回工作台</h2>
+            <p>完整教学手册已经转换为网页，可在手机上阅读。也可以直接打开原始 Markdown 文件。</p>
+          </div>
+        </div>
+        <div class="manual-grid">
+          <a class="manual-card" href="manual.html">
+            <span>READ / 01</span>
+            <h3>零基础教学手册</h3>
+            <p>系统架构、硬件原理、协议、算法、参数、标定、排错和自测题。</p>
+            <b>打开在线阅读</b>
+          </a>
+          <a class="manual-card" href="../参数手册.md">
+            <span>REFERENCE / 02</span>
+            <h3>参数与标定手册</h3>
+            <p>每个参数的单位、合理范围、测法、调错现象和记录表。</p>
+            <b>打开 Markdown</b>
+          </a>
+          <a class="manual-card" href="../Keil使用导航.md">
+            <span>TOOL / 03</span>
+            <h3>Keil 使用导航</h3>
+            <p>打开工程、编译、烧录、调试、测试工程和常见错误。</p>
+            <b>打开 Markdown</b>
+          </a>
+        </div>
+      </section>
+
+      <footer class="site-footer">
+        <div>
+          <strong>MECANUM / LAB</strong>
+          <span>离线可视化教学台 · 阶段 4</span>
+        </div>
+        <div class="footer-right">
+          <span>所有图表来自 <code>diagrams/</code></span>
+          <a href="#overview">回到顶部 ↑</a>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
+
+
+
+
