@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
@@ -58,7 +58,7 @@
         <div class="hero-copy">
           <p class="eyebrow">STM32F407 / HC-04 / FOUR-WHEEL MECANUM</p>
           <h1 id="overview-title">把一台麦轮车<br><span class="display-outline">拆成可读的信号。</span></h1>
-          <p class="hero-lede">从电脑摇杆到四个轮子，从编码器计数到 PID 曲线。这里不是一张说明书，而是一张可以点、可以调、可以验证的工程地图。</p>
+          <p class="hero-lede">从电脑按键到四个轮子，从编码器计数到位置曲线。这里不是一张说明书，而是一张可以点、可以调、可以验证的工程地图。</p>
           <div class="hero-actions">
             <a class="button" href="#calibration">进入标定向导</a>
             <a class="button ghost" href="manual.html">打开教学手册</a>
@@ -147,7 +147,7 @@
             </article>
             <article class="layer-row">
               <span class="layer-code">L3</span>
-              <div><h3>控制层</h3><p>模式状态机、加速度平滑、位置 PID、定时旋转与路线。</p></div>
+              <div><h3>控制层</h3><p>模式状态机、位置 PID（仅控制与测试页）、定时旋转与路线。</p></div>
             </article>
             <article class="layer-row">
               <span class="layer-code">L2</span>
@@ -166,7 +166,7 @@
             <img src="assets/data_flow.svg" alt="从电脑指令到四个轮子，再通过编码器回到电脑的数据流图">
           </figure>
           <div class="flow-steps" role="list">
-            <div role="listitem"><b>01</b><span>摇杆采样</span><code>_manual_tick()</code></div>
+            <div role="listitem"><b>01</b><span>按键/WASD 采样</span><code>_manual_tick()</code></div>
             <div role="listitem"><b>02</b><span>组帧发送</span><code>cmd_manual()</code></div>
             <div role="listitem"><b>03</b><span>蓝牙透传</span><code>HC-04</code></div>
             <div role="listitem"><b>04</b><span>帧解析</span><code>Bluetooth_OnRxByte()</code></div>
@@ -357,12 +357,10 @@
               <select id="proto-command">
                 <option value="manual">0x01 手动速度</option>
                 <option value="brake-fast">0x02 急刹停</option>
-                <option value="brake-soft">0x03 缓停</option>
                 <option value="pid-stop">0x04 位置 PID 停</option>
                 <option value="rotate">0x0D 原地旋转</option>
                 <option value="heartbeat">0x0A 心跳</option>
                 <option value="stop">0x06 急停</option>
-                <option value="accel">0x0E 设置加速度</option>
               </select>
             </label>
             <div id="proto-fields" class="form-grid protocol-fields"></div>

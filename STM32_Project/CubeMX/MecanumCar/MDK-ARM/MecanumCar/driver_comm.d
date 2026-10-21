@@ -1,34 +1,24 @@
-mecanumcar\driver_comm.o: ../User/driver_comm.c
-mecanumcar\driver_comm.o: ../Core/Inc/main.h
-mecanumcar\driver_comm.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h
-mecanumcar\driver_comm.o: ../Core/Inc/stm32f4xx_hal_conf.h
-mecanumcar\driver_comm.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h
-mecanumcar\driver_comm.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h
-mecanumcar\driver_comm.o: ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f4xx.h
-mecanumcar\driver_comm.o: ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f407xx.h
-mecanumcar\driver_comm.o: ../Drivers/CMSIS/Include/core_cm4.h
-mecanumcar\driver_comm.o: D:\Keil\ARM\ARMCC\Bin\..\include\stdint.h
-mecanumcar\driver_comm.o: ../Drivers/CMSIS/Include/cmsis_version.h
-mecanumcar\driver_comm.o: ../Drivers/CMSIS/Include/cmsis_compiler.h
-mecanumcar\driver_comm.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
-mecanumcar\driver_comm.o: ../Drivers/CMSIS/Include/mpu_armv7.h
-mecanumcar\driver_comm.o: ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/system_stm32f4xx.h
-mecanumcar\driver_comm.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h
-mecanumcar\driver_comm.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h
-mecanumcar\driver_comm.o: D:\Keil\ARM\ARMCC\Bin\..\include\stddef.h
-mecanumcar\driver_comm.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc_ex.h
-mecanumcar\driver_comm.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_gpio.h
-mecanumcar\driver_comm.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_gpio_ex.h
-mecanumcar\driver_comm.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_exti.h
-mecanumcar\driver_comm.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dma.h
-mecanumcar\driver_comm.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dma_ex.h
-mecanumcar\driver_comm.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_cortex.h
-mecanumcar\driver_comm.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash.h
-mecanumcar\driver_comm.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ex.h
-mecanumcar\driver_comm.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ramfunc.h
-mecanumcar\driver_comm.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h
-mecanumcar\driver_comm.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h
-mecanumcar\driver_comm.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
-mecanumcar\driver_comm.o: D:\Keil\ARM\ARMCC\Bin\..\include\stdio.h
-mecanumcar\driver_comm.o: D:\Keil\ARM\ARMCC\Bin\..\include\string.h
-mecanumcar\driver_comm.o: ../User/driver_comm.h
+mecanumcar/driver_comm.o: ..\User\driver_comm.c ..\Core\Inc\main.h \
+  ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal.h \
+  ..\Core\Inc\stm32f4xx_hal_conf.h \
+  ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_rcc.h \
+  ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_def.h \
+  ..\Drivers\CMSIS\Device\ST\STM32F4xx\Include\stm32f4xx.h \
+  ..\Drivers\CMSIS\Device\ST\STM32F4xx\Include\stm32f407xx.h \
+  ..\Drivers\CMSIS\Include\core_cm4.h \
+  ..\Drivers\CMSIS\Device\ST\STM32F4xx\Include\system_stm32f4xx.h \
+  ..\Drivers\STM32F4xx_HAL_Driver\Inc\Legacy\stm32_hal_legacy.h \
+  ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_rcc_ex.h \
+  ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_gpio.h \
+  ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_gpio_ex.h \
+  ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_exti.h \
+  ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_dma.h \
+  ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_dma_ex.h \
+  ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_cortex.h \
+  ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_flash.h \
+  ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_flash_ex.h \
+  ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_flash_ramfunc.h \
+  ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_pwr.h \
+  ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_pwr_ex.h \
+  ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_uart.h \
+  ..\User\driver_comm.h

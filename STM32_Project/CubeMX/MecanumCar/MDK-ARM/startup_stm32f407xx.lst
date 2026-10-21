@@ -841,17 +841,17 @@ ARM Macro Assembler    Page 13
               00000400 
               00000200 
               00000000 
-Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M4.fp --apcs=int
-erwork --depend=mecanumcar\startup_stm32f407xx.d -omecanumcar\startup_stm32f407
+Command Line: --debug --xref --diag_suppress=9931,A1950W --cpu=Cortex-M4.fp.sp 
+--depend=mecanumcar\startup_stm32f407xx.d -omecanumcar\startup_stm32f407xx.o -I
 
 
 
 ARM Macro Assembler    Page 14 
 
 
-xx.o -I.\RTE\_MecanumCar -ID:\Keil\ARM\CMSIS\5.0.1\CMSIS\Include --predefine="_
-_UVISION_VERSION SETA 525" --predefine="_RTE_ SETA 1" --list=startup_stm32f407x
-x.lst startup_stm32f407xx.s
+.\RTE\_MecanumCar -ID:\keil\ARM\CMSIS\6.1.0\CMSIS\Core\Include --predefine="__U
+VISION_VERSION SETA 540" --predefine="STM32F407xx SETA 1" --predefine="_RTE_ SE
+TA 1" --list=startup_stm32f407xx.lst startup_stm32f407xx.s
 
 
 
@@ -1955,4 +1955,4 @@ Symbol: __use_two_region_memory
       None
 Comment: __use_two_region_memory unused
 3 symbols
-447 symbols in table
+448 symbols in table

@@ -1,39 +1,26 @@
-mecanumcar\user_app.o: ../User/user_app.c
-mecanumcar\user_app.o: ../Core/Inc/main.h
-mecanumcar\user_app.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h
-mecanumcar\user_app.o: ../Core/Inc/stm32f4xx_hal_conf.h
-mecanumcar\user_app.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h
-mecanumcar\user_app.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h
-mecanumcar\user_app.o: ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f4xx.h
-mecanumcar\user_app.o: ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f407xx.h
-mecanumcar\user_app.o: ../Drivers/CMSIS/Include/core_cm4.h
-mecanumcar\user_app.o: D:\Keil\ARM\ARMCC\Bin\..\include\stdint.h
-mecanumcar\user_app.o: ../Drivers/CMSIS/Include/cmsis_version.h
-mecanumcar\user_app.o: ../Drivers/CMSIS/Include/cmsis_compiler.h
-mecanumcar\user_app.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
-mecanumcar\user_app.o: ../Drivers/CMSIS/Include/mpu_armv7.h
-mecanumcar\user_app.o: ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/system_stm32f4xx.h
-mecanumcar\user_app.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h
-mecanumcar\user_app.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h
-mecanumcar\user_app.o: D:\Keil\ARM\ARMCC\Bin\..\include\stddef.h
-mecanumcar\user_app.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc_ex.h
-mecanumcar\user_app.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_gpio.h
-mecanumcar\user_app.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_gpio_ex.h
-mecanumcar\user_app.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_exti.h
-mecanumcar\user_app.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dma.h
-mecanumcar\user_app.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dma_ex.h
-mecanumcar\user_app.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_cortex.h
-mecanumcar\user_app.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash.h
-mecanumcar\user_app.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ex.h
-mecanumcar\user_app.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ramfunc.h
-mecanumcar\user_app.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h
-mecanumcar\user_app.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h
-mecanumcar\user_app.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
-mecanumcar\user_app.o: D:\Keil\ARM\ARMCC\Bin\..\include\string.h
-mecanumcar\user_app.o: ../User/user_app.h
-mecanumcar\user_app.o: ../User/driver_comm.h
-mecanumcar\user_app.o: ../User/bsp_bluetooth.h
-mecanumcar\user_app.o: ../User/bsp_motor.h
-mecanumcar\user_app.o: ../User/bsp_encoder.h
-mecanumcar\user_app.o: ../User/chassis_control.h
-mecanumcar\user_app.o: ../User/control_mode.h
+mecanumcar/user_app.o: ..\User\user_app.c ..\Core\Inc\main.h \
+  ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal.h \
+  ..\Core\Inc\stm32f4xx_hal_conf.h \
+  ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_rcc.h \
+  ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_def.h \
+  ..\Drivers\CMSIS\Device\ST\STM32F4xx\Include\stm32f4xx.h \
+  ..\Drivers\CMSIS\Device\ST\STM32F4xx\Include\stm32f407xx.h \
+  ..\Drivers\CMSIS\Include\core_cm4.h \
+  ..\Drivers\CMSIS\Device\ST\STM32F4xx\Include\system_stm32f4xx.h \
+  ..\Drivers\STM32F4xx_HAL_Driver\Inc\Legacy\stm32_hal_legacy.h \
+  ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_rcc_ex.h \
+  ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_gpio.h \
+  ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_gpio_ex.h \
+  ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_exti.h \
+  ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_dma.h \
+  ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_dma_ex.h \
+  ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_cortex.h \
+  ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_flash.h \
+  ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_flash_ex.h \
+  ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_flash_ramfunc.h \
+  ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_pwr.h \
+  ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_pwr_ex.h \
+  ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_uart.h \
+  ..\User\user_app.h ..\User\driver_comm.h ..\User\bsp_bluetooth.h \
+  ..\User\bsp_motor.h ..\User\bsp_encoder.h ..\User\chassis_control.h \
+  ..\User\control_mode.h

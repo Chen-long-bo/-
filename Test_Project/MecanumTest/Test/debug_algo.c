@@ -1,4 +1,4 @@
-﻿#include "debug_algo.h"     /* 本模块头文件 */
+#include "debug_algo.h"     /* 本模块头文件 */
 #define PI_F 3.14159265f    /* 圆周率常量 */
 
 /* 麦轮逆运动学：车体速度 -> 四轮线速度（m/s）
@@ -43,16 +43,3 @@ float DebugAlgo_SuggestRotateMs(float current_ms_per_90, float measured_deg)
     return current_ms_per_90 * 90.0f / measured_deg;         /* 按比例换算 */
 }
 
-/* 加速度平滑一步：把 current 按 accel*dt 逼近 target */
-float DebugAlgo_RampStep(float current, float target, float accel, float dt)
-{
-    float step = accel * dt;                                 /* 本周期的速度增量 */
-    if (target > current) {                                  /* 加速 */
-        current += step;
-        if (current > target) { current = target; }
-    } else if (target < current) {                           /* 减速 */
-        current -= step;
-        if (current < target) { current = target; }
-    }
-    return current;
-}

@@ -78,8 +78,8 @@
 <li><a href="#5-2-开环与闭环">5.2 开环与闭环</a></li>
 <li><a href="#5-3-算法-麦轮逆运动学">5.3 【算法】麦轮逆运动学</a></li>
 <li><a href="#5-4-算法-归一化与最小驱动">5.4 【算法】归一化与最小驱动</a></li>
-<li><a href="#5-5-算法-加速度平滑">5.5 【算法】加速度平滑</a></li>
-<li><a href="#5-6-三种停止方式">5.6 三种停止方式</a></li>
+<li><a href="#5-5-缓起缓停已删除">5.5 缓起缓停已删除</a></li>
+<li><a href="#5-6-停止方式">5.6 停止方式</a></li>
 <li><a href="#5-7-算法-原地旋转与时间标定">5.7 【算法】原地旋转与时间标定</a></li>
 <li><a href="#5-8-算法-pid-位置环">5.8 【算法】PID 位置环</a><ul>
 <li><a href="#pid-是什么">PID 是什么</a></li>
@@ -152,7 +152,7 @@
 <li><a href="#p1-编码器标定">P1：编码器标定</a></li>
 <li><a href="#p2-旋转标定">P2：旋转标定</a></li>
 <li><a href="#p3-路线同步">P3：路线同步</a></li>
-<li><a href="#p4-平滑和低速">P4：平滑和低速</a></li>
+<li><a href="#p4-低速与安全">P4：低速与安全</a></li>
 <li><a href="#p5-工程清理-暂不执行">P5：工程清理（暂不执行）</a></li>
 </ul>
 </li>
@@ -164,6 +164,7 @@
 </ul>
 </div>
 <blockquote>
+<p>2026-10-21 变更：普通手动、固定路线和旋转已取消缓起/缓停；PID 只在“控制与测试”页使用。车轮辊轮方向按 <code>车轮布局.jpg</code>：A <code>/</code>，B <code>\</code>，C <code>\</code>，D <code>/</code>（俯视图）。</p>
 <p>工程目录：<code>D:\CODEX-WORK\蓝牙遥控麦轮小车</code><br>
 适用对象：没有编程基础，但愿意按步骤接线、烧录、观察和记录现象的使用者。<br>
 本手册的目标不是让你背代码，而是让你逐步建立这张心智地图：</p>
@@ -293,7 +294,7 @@ wz &gt; 0：逆时针旋转（从上往下看，车头向左转）
 <tr>
 <td>80mm 麦轮 ×4</td>
 <td>把轮子转动变成全向移动</td>
-<td>左、右两侧辊轮互为镜像</td>
+<td>按实车图：A /，B \，C \，D /（俯视图）</td>
 </tr>
 <tr>
 <td>3S 锂电池</td>
@@ -383,7 +384,7 @@ wz &gt; 0：逆时针旋转（从上往下看，车头向左转）
 ⑧ 20ms 控制周期
    control_mode.c
    ControlMode_Poll()
-   → RampToward() 做加速度平滑
+   → 直接发送目标速度（普通控制不使用平滑）
    → ControlMode_RunSpeedLoop()
 
 ⑨ 麦轮逆运动学
@@ -601,7 +602,7 @@ bsp_bluetooth.c 从 USART1 发回 HC-04
 <pre><code class="language-text">A 左前       B 右前
 C 左后       D 右后
 </code></pre>
-<p>你的实车已经确认：左侧前后轮辊轮方向一致，右侧前后轮方向一致，并且左右互为镜像（X 型布局）。这为横移和旋转提供了机械基础。</p>
+<p>按 <code>车轮布局.jpg</code> 的俯视图：A 轮辊轮向右上（/），B 轮向右下（\），C 轮向右下（\），D 轮向右上（/）。电机方向、编码器方向和代码符号仍要分别验证。这为横移和旋转提供了机械基础。</p>
 <blockquote>
 <p>仍然需要做“单轮方向测试”，因为“辊轮方向正确”不等于“电机正负方向、编码器方向、代码符号”三者已经一致。</p>
 </blockquote>
@@ -743,12 +744,6 @@ AA 55 07 01 E8 03 00 00 00 00 F3
 <td>直接发零速度，模式回空闲</td>
 </tr>
 <tr>
-<td><code>0x03</code></td>
-<td>缓停</td>
-<td>1 字节减速档位</td>
-<td>目标速度逐步降为 0</td>
-</tr>
-<tr>
 <td><code>0x04</code></td>
 <td>位置 PID 停</td>
 <td>int16 目标距离 mm</td>
@@ -801,12 +796,6 @@ AA 55 07 01 E8 03 00 00 00 00 F3
 <td>原地旋转</td>
 <td>int16 角度，单位 0.1°</td>
 <td>正数左转，负数右转</td>
-</tr>
-<tr>
-<td><code>0x0E</code></td>
-<td>设置加速度</td>
-<td>线/角加速度 ×1000</td>
-<td>运行期平滑参数</td>
 </tr>
 </tbody>
 </table></div>
@@ -950,20 +939,10 @@ a + b = 0.12675 m
 <blockquote>
 <p>注意：这是“整体放大”，不是把每个轮子都强行设成 0.3；它保持四个轮子的比例关系，避免破坏运动方向。</p>
 </blockquote>
-<h3 id="5-5-算法-加速度平滑">5.5 【算法】加速度平滑</h3>
-<p><code>RampToward()</code> 的作用是让目标速度不要瞬间跳变：</p>
-<pre><code class="language-text">当前速度 → 每次靠近目标一点点 → 最终到达目标
-</code></pre>
-<p>每个 20ms 周期的最大变化量：</p>
-<pre><code class="language-text">线速度：CFG_ACCEL_V × 0.02 s
-角速度：CFG_ACCEL_W × 0.02 s
-</code></pre>
-<p>当前：</p>
-<pre><code class="language-text">CFG_ACCEL_V = 1.0 m/s²
-CFG_ACCEL_W = 3.0 rad/s²
-</code></pre>
-<p>如果从 0 加速到 1.0 m/s，理论上至少需要约 1 秒。这样电机不会“猛冲”，但也意味着响应变慢。</p>
-<h3 id="5-6-三种停止方式">5.6 三种停止方式</h3>
+<h3 id="5-5-缓起缓停已删除">5.5 缓起缓停已删除</h3>
+<p>2026-10-21 版本已删除普通手动、固定路线和旋转中的缓起/缓停及速度斜坡。</p>
+<p>当前普通控制直接执行目标速度；需要平滑效果时，应在控制与测试页通过 PID 参数和机械标定获得稳定响应。</p>
+<h3 id="5-6-停止方式">5.6 停止方式</h3>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -981,20 +960,14 @@ CFG_ACCEL_W = 3.0 rad/s²
 <td>紧急情况、测试</td>
 </tr>
 <tr>
-<td>缓停</td>
-<td><code>MODE_BRAKE_SOFT</code>，每 20ms 减 <code>CFG_SOFT_BRAKE_DECEL</code></td>
-<td>平滑减速</td>
-<td>正常停车</td>
-</tr>
-<tr>
-<td>PID 精准停</td>
+<td>PID 位置停</td>
 <td>位置环 + 编码器距离反馈</td>
 <td>走到指定距离后停</td>
-<td>需要位置精度的实验</td>
+<td>控制与测试页</td>
 </tr>
 </tbody>
 </table></div>
-<p>注意：本工程所说的“急刹”是让驱动模块目标速度归零，不是机械抱闸；轮子仍会因惯性滑行一小段。真正的机械刹车需要额外硬件。</p>
+<p>注意：本工程所说的“急刹”是让驱动模块目标速度归零，不是机械抱闸；轮子仍会因惯性滑行一小段。</p>
 <h3 id="5-7-算法-原地旋转与时间标定">5.7 【算法】原地旋转与时间标定</h3>
 <p>当前旋转不是角度闭环，而是<strong>时间控制</strong>：</p>
 <pre><code class="language-text">旋转时间 = |目标角度| / 90° × CFG_ROTATE_MS_PER_90
@@ -1324,7 +1297,7 @@ USART3 收到字节 → Bluetooth_OnRxByte()
   → 请求编码器
   → 根据模式执行：
        IDLE：停车
-       MANUAL：平滑 + 逆运动学 + $Car
+       MANUAL：直接速度 + 逆运动学 + $Car
        BRAKE_SOFT：逐步减速
        POS_STOP：位置 PID
        ROTATE_ANGLE：定时旋转
@@ -1380,7 +1353,7 @@ USART3 收到字节 → Bluetooth_OnRxByte()
 <td>运行期参数</td>
 <td>上位机 PID/调试中心</td>
 <td>点下发，掉电可能丢失</td>
-<td>位置 PID、限幅、加速度</td>
+<td>位置 PID、限幅</td>
 </tr>
 <tr>
 <td>只读诊断</td>
@@ -1413,15 +1386,15 @@ USART3 收到字节 → Bluetooth_OnRxByte()
 <td><code>CFG_DRIVER_BAUD</code></td>
 <td style="text-align: right;">115200</td>
 <td>bps</td>
-<td>注释上的驱动模块波特率</td>
-<td>当前 <code>usart.c</code> 仍硬编码，改宏不一定生效</td>
+<td>USART2 与驱动模块的波特率</td>
+<td>必须与驱动模块实际波特率一致</td>
 </tr>
 <tr>
 <td><code>CFG_DEBUG_BAUD</code></td>
 <td style="text-align: right;">115200</td>
 <td>bps</td>
-<td>注释上的调试波特率</td>
-<td>当前 <code>usart.c</code> 仍硬编码</td>
+<td>USART3 有线调试波特率</td>
+<td>必须与 USB 转串口一致</td>
 </tr>
 <tr>
 <td><code>CFG_WHEEL_DIAMETER_MM</code></td>
@@ -1478,20 +1451,6 @@ USART3 收到字节 → Bluetooth_OnRxByte()
 <td>归一化</td>
 <td>低速最小驱动</td>
 <td>太小震动，太大起步猛</td>
-</tr>
-<tr>
-<td><code>CFG_ACCEL_V</code></td>
-<td style="text-align: right;">1.0</td>
-<td>m/s²</td>
-<td>线速度平滑</td>
-<td>越大越急</td>
-</tr>
-<tr>
-<td><code>CFG_ACCEL_W</code></td>
-<td style="text-align: right;">3.0</td>
-<td>rad/s²</td>
-<td>角速度平滑</td>
-<td>越大旋转起停越急</td>
 </tr>
 <tr>
 <td><code>CFG_ROTATE_DRIVE</code></td>
@@ -1564,13 +1523,6 @@ USART3 收到字节 → Bluetooth_OnRxByte()
 <td>大→阻尼但可能放大噪声</td>
 </tr>
 <tr>
-<td><code>CFG_SOFT_BRAKE_DECEL</code></td>
-<td style="text-align: right;">0.02</td>
-<td>m/s per 20ms</td>
-<td>缓停减速度</td>
-<td>大→停得快，小→停得慢</td>
-</tr>
-<tr>
 <td><code>CFG_ROUTE_SIDE_MM</code></td>
 <td style="text-align: right;">800</td>
 <td>mm</td>
@@ -1593,17 +1545,12 @@ USART3 收到字节 → Bluetooth_OnRxByte()
 <tr>
 <td><code>g_mode</code></td>
 <td>当前模式</td>
-<td>IDLE/MANUAL/BRAKE_SOFT/POS_STOP/ROUTE/ROTATE_ANGLE</td>
+<td>IDLE/MANUAL/POS_STOP/ROUTE/ROTATE_ANGLE</td>
 </tr>
 <tr>
 <td><code>g_target_vx/vy/wz</code></td>
 <td>目标车体速度</td>
 <td>来自 0x01 指令</td>
-</tr>
-<tr>
-<td><code>g_ramp_vx/vy/wz</code></td>
-<td>平滑后的速度</td>
-<td>每个周期逐步靠近目标</td>
 </tr>
 <tr>
 <td><code>g_wheel_target[4]</code></td>
@@ -1639,11 +1586,6 @@ USART3 收到字节 → Bluetooth_OnRxByte()
 <td><code>g_rotate_dir</code></td>
 <td>旋转方向</td>
 <td>+1 左转，-1 右转</td>
-</tr>
-<tr>
-<td><code>g_accel_v/w</code></td>
-<td>运行期加速度</td>
-<td>可被 0x0E 修改</td>
 </tr>
 <tr>
 <td><code>g_max_speed/omega</code></td>
@@ -1715,7 +1657,7 @@ USART3 收到字节 → Bluetooth_OnRxByte()
 <li>重新编译主工程；</li>
 <li>烧录；</li>
 <li>用测试工程/调试中心做单轮、编码器、旋转标定；</li>
-<li>再改控制参数（最小驱动、加速度、PID）；</li>
+<li>再改控制参数（最小驱动、PID）；</li>
 <li>每次只改一个参数，记录“改前/改后现象”；</li>
 <li>不要同时改代码、参数和接线，否则无法判断是谁造成的。</li>
 </ol>
@@ -1918,7 +1860,7 @@ min 0.30
 <li>麦轮逆运动学中 <code>a+b</code> 代表什么？</li>
 <li>为什么旋转时左右轮方向相反？</li>
 <li><code>CFG_MIN_DRIVE</code> 为什么会影响低速抖动？</li>
-<li><code>RampToward</code> 和 PID 的区别是什么？</li>
+<li>普通直接速度控制和 PID 的区别是什么？</li>
 <li>PID 的 P、I、D 分别解决什么问题？</li>
 <li>为什么当前旋转是“时间控制”，不是“角度闭环”？</li>
 <li>如果实际转 80° 而目标是 90°，旋转时间应该变长还是变短？</li>
@@ -1953,8 +1895,8 @@ min 0.30
 <tr>
 <td>U2</td>
 <td>辊轮方向</td>
-<td>左右镜像的 X 型布局</td>
-<td>看四个轮子辊轮排列，单轮测试</td>
+<td>A <code>/</code>，B <code>\</code>，C <code>\</code>，D <code>/</code>（按车轮布局.jpg）</td>
+<td>对照图片、单轮测试和整车横移/旋转测试</td>
 </tr>
 <tr>
 <td>U3</td>
@@ -2073,11 +2015,12 @@ min 0.30
 <li>低速、短边、长停顿测试；</li>
 <li>暂不依赖固件 <code>route.c</code>。</li>
 </ul>
-<h3 id="p4-平滑和低速">P4：平滑和低速</h3>
+<h3 id="p4-低速与安全">P4：低速与安全</h3>
 <ul>
 <li>调 <code>CFG_MIN_DRIVE</code>；</li>
-<li>调 <code>CFG_ACCEL_V/CFG_ACCEL_W</code>；</li>
-<li>观察起步、停车、震动。</li>
+<li>观察低速是否震动、起步是否过猛；</li>
+<li>确认松开按键立即停止；</li>
+<li>确认急停/通信超时后能够安全停车。</li>
 </ul>
 <h3 id="p5-工程清理-暂不执行">P5：工程清理（暂不执行）</h3>
 <ul>

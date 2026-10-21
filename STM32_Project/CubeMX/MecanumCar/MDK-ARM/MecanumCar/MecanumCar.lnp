@@ -1,4 +1,4 @@
---cpu=Cortex-M4.fp
+--cpu=Cortex-M4.fp.sp
 "mecanumcar\startup_stm32f407xx.o"
 "mecanumcar\main.o"
 "mecanumcar\gpio.o"

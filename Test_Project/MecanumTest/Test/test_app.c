@@ -1,4 +1,4 @@
-﻿#include "main.h"             /* HAL */
+#include "main.h"             /* HAL */
 #include <string.h>           /* strlen */
 #include <stdio.h>            /* sprintf */
 #include "test_app.h"         /* 本模块 */
@@ -126,7 +126,6 @@ static void Test_Help(void)
     Test_Print("rotcal <measured_deg>        - suggest 90deg time\r\n");
     Test_Print("min <speed>                  - low-speed pulse 1500ms\r\n");
     Test_Print("sign [0-3] [1/-1]            - show/set wheel sign\r\n");
-    Test_Print("ramp <v0> <v1> <accel>       - print accel ramp timeline\r\n");
     Test_Print("pidstep <kp> <ki> <kd> <tgt> - PID step simulation\r\n");
     Test_Print("raw <text>                   - send raw text to module\r\n");
     Test_Print("link                         - link self-test\r\n");
@@ -277,26 +276,6 @@ static void Test_Sign(const char *arg)
     Test_Print("\r\n");
 }
 
-static void Test_Ramp(const char *arg)
-{
-    float v0 = 0, v1 = 0, accel = 0;
-    const char *p = Test_NextFloat(arg, &v0);
-    p = (p ? Test_NextFloat(p, &v1) : NULL);
-    p = (p ? Test_NextFloat(p, &accel) : NULL);
-    if (!p || accel <= 0.0f) { Test_Print("usage: ramp <v0> <v1> <accel>\r\n"); return; }
-    float v = v0;
-    int i;
-    for (i = 0; i < 100; i++) {              /* 2s，20ms一步 */
-        v = DebugAlgo_RampStep(v, v1, accel, 0.02f);
-        if ((i % 5) == 0) {
-            Test_Print("t="); Test_PrintInt(i * 20);
-            Test_Print("ms v="); Test_PrintFloat(v);
-            Test_Print("\r\n");
-        }
-        if (v == v1) { break; }
-    }
-}
-
 static void Test_PidStep(const char *arg)
 {
     float kp = 0, ki = 0, kd = 0, target = 0;
@@ -353,7 +332,6 @@ static void Test_Parse(const char *line)
     else if (strncmp(line, "rotcal ", 7) == 0) { Test_Rotcal(line + 7); }
     else if (strncmp(line, "min ", 4) == 0) { Test_Min(line + 4); }
     else if (strncmp(line, "sign", 4) == 0) { Test_Sign(line + 4); }
-    else if (strncmp(line, "ramp ", 5) == 0) { Test_Ramp(line + 5); }
     else if (strncmp(line, "pidstep ", 8) == 0) { Test_PidStep(line + 8); }
     else if (strncmp(line, "raw ", 4) == 0) { Test_Raw(line + 4); }
     else if (strncmp(line, "link", 4) == 0) { Test_Link(); }

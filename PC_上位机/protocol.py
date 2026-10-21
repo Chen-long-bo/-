@@ -74,11 +74,6 @@ def cmd_brake_fast() -> bytes:
     return build_frame(config.CMD_BRAKE_FAST)     # 无数据
 
 
-def cmd_brake_soft(decel: int = 0) -> bytes:
-    """缓停：decel 为减速档位（0=默认）。"""
-    return build_frame(config.CMD_BRAKE_SOFT, bytes([decel & 0xFF]))   # 1字节
-
-
 def cmd_pid_stop(target_mm: int) -> bytes:
     """PID精准停：目标相对距离，单位mm。"""
     data = struct.pack("<h", int(target_mm))      # 有符号16位
@@ -109,11 +104,6 @@ def cmd_rotate(angle_deg: float) -> bytes:
     """原地旋转指定角度：正=左转/逆时针，负=右转/顺时针，单位0.1度。"""
     data = struct.pack("<h", int(round(angle_deg * 10.0)))   # 度 -> 0.1度
     return build_frame(config.CMD_ROTATE_ANGLE, data)        # 组帧
-
-def cmd_set_accel(v_accel: float, w_accel: float) -> bytes:
-    """设置线/角加速度限制：值越大越接近急停急行。"""
-    data = struct.pack("<HH", int(v_accel * 1000), int(w_accel * 1000))   # 两个u16
-    return build_frame(config.CMD_SET_ACCEL, data)                        # 组帧
 
 def cmd_enc_zero() -> bytes:
     """编码器清零。"""
@@ -174,6 +164,7 @@ def parse_params(data: bytes):
     vals = struct.unpack_from("<HHHHHHHH", data, 0)   # 8个u16
     return {"kp": vals[0] / 1000.0, "ki": vals[1] / 1000.0, "kd": vals[2] / 1000.0,
             "vmax": vals[6] / 1000.0, "wmax": vals[7] / 1000.0}
+
 
 
 

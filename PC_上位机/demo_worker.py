@@ -3,6 +3,7 @@
 
 import math                                     # 数学函数
 import struct                                   # 解析指令数据
+import time                                     # 时间控制
 from PySide6.QtCore import QThread, Signal      # Qt线程与信号
 import config                                   # 全局配置
 import protocol                                 # 协议模块
@@ -19,6 +20,7 @@ class DemoWorker(QThread):
     log_received = Signal(str)                  # 日志
     tx_log = Signal(str)                        # 发送日志
     rx_log = Signal(str)                        # 接收日志
+    rx_activity = Signal(int)                   # 接收活动，保持与串口线程一致
 
     def __init__(self):
         super().__init__()                      # 父类初始化
@@ -34,7 +36,10 @@ class DemoWorker(QThread):
         self.pos_target = 0.0                   # 位置停目标
         self.pos_start = 0.0                    # 位置停起点
         self.distance = 0.0                     # 当前距离
-        self.soft_stop = False                  # 缓停标志
+        self.integral = 0.0                     # PID积分
+        self.prev_error = 0.0                   # 上次误差
+        self.rotate_until = 0.0                 # 旋转结束时间
+        self.rotate_wz = 0.0                    # 旋转角速度
 
     def start(self):
         """启动模拟线程。"""
@@ -53,25 +58,28 @@ class DemoWorker(QThread):
 
     def _update(self, dt: float):
         """更新模拟状态。"""
+        now = time.monotonic()                  # 当前时间
         if self.mode == 1:                      # 手动
             vx, vy = self.target                # 取目标
             wz = self.target_wz                 # 取角速度
-        elif self.mode == 3:                    # PID精准停
-            err = self.pos_target + self.pos_start - self.distance   # 位置误差
-            vx = max(-self.vmax, min(self.vmax, err * self.kp))      # P控制
+        elif self.mode == 3:                    # PID 位置控制
+            error = self.pos_target + self.pos_start - self.distance   # 位置误差
+            self.integral += error * dt         # 积分
+            self.integral = max(-self.vmax, min(self.vmax, self.integral))   # 积分限幅
+            derivative = error - self.prev_error   # 微分（与固件一致，不再除dt）
+            vx = self.kp * error + self.ki * self.integral + self.kd * derivative   # PID
+            vx = max(-self.vmax, min(self.vmax, vx))   # 输出限幅
+            self.prev_error = error             # 保存误差
             vy, wz = 0.0, 0.0                   # 只前后
-            if abs(err) < 0.01:                 # 到位
+            if abs(error) < config.POS_STOP_TOL_MM / 1000.0:   # 到位
                 self.mode = 0                   # 停止
                 vx = 0.0                        # 速度0
-        elif self.mode == 2:                    # 缓停
-            vx, vy, wz = self.target[0], self.target[1], self.target_wz   # 当前目标
-            vx *= 0.85                          # 逐步减小
-            vy *= 0.85                          # 逐步减小
-            wz *= 0.85                          # 逐步减小
-            self.target = [vx, vy]              # 保存
-            self.target_wz = wz                 # 保存
-            if abs(vx) < 0.002 and abs(vy) < 0.002 and abs(wz) < 0.002:  # 足够小
-                self.mode = 0                   # 停止
+        elif self.mode == 5:                    # 原地旋转
+            if now < self.rotate_until:         # 未到时间
+                vx, vy, wz = 0.0, 0.0, self.rotate_wz   # 保持旋转
+            else:
+                vx, vy, wz = 0.0, 0.0, 0.0      # 到时间停止
+                self.mode = 0                   # 回空闲
         else:
             vx, vy, wz = 0.0, 0.0, 0.0          # 其它模式停止
 
@@ -100,6 +108,7 @@ class DemoWorker(QThread):
         self.status_received.emit(status)       # 发出状态
         curve = {"target": list(self.target_wheel), "actual": list(self.actual)}   # 曲线
         self.curve_received.emit(curve)         # 发出曲线
+        self.rx_activity.emit(27)               # 模拟收到状态帧
 
     def send_frame(self, frame: bytes):
         """接收界面指令并更新模拟状态。"""
@@ -121,12 +130,12 @@ class DemoWorker(QThread):
             self.target_wz = 0.0                # 角速度清零
             self.actual = [0.0, 0.0, 0.0, 0.0]  # 立即停
             self.mode = 0                       # 空闲
-        elif cmd == config.CMD_BRAKE_SOFT:      # 缓停
-            self.mode = 2                       # 缓停模式
         elif cmd == config.CMD_PID_STOP and len(data) >= 2:   # 位置停
             target_mm = struct.unpack_from("<h", data, 0)[0]  # 目标mm
             self.pos_start = self.distance      # 起点
             self.pos_target = target_mm / 1000.0   # 目标m
+            self.integral = 0.0                 # 清积分
+            self.prev_error = 0.0               # 清微分
             self.mode = 3                       # 位置停模式
         elif cmd == config.CMD_ROUTE:           # 路线（演示简化为前进）
             self.target = [0.25, 0.0]           # 前进
@@ -137,19 +146,22 @@ class DemoWorker(QThread):
             self.target_wz = 0.0                # 清零
             self.actual = [0.0, 0.0, 0.0, 0.0]  # 停
             self.mode = 0                       # 空闲
+        elif cmd == config.CMD_ROTATE_ANGLE and len(data) >= 2:   # 旋转
+            angle = struct.unpack_from("<h", data, 0)[0] / 10.0   # 0.1° -> °
+            self.rotate_wz = 0.6 if angle >= 0 else -0.6          # 旋转方向
+            self.rotate_until = time.monotonic() + abs(angle) / 90.0 * config.ROTATE_MS_PER_90 / 1000.0   # 结束时间
+            self.mode = 5                       # 旋转模式
         elif cmd == config.CMD_SET_POS_PID and len(data) >= 6:   # 设置PID
             kp, ki, kd = struct.unpack_from("<HHH", data, 0)     # 解析
             self.kp, self.ki, self.kd = kp / 1000.0, ki / 1000.0, kd / 1000.0   # 保存
-            ack = {"cmd": cmd, "err": 0}        # ACK
-            self.ack_received.emit(ack)         # 发出
+            self.ack_received.emit({"cmd": cmd, "err": 0})       # ACK
         elif cmd == config.CMD_ENC_ZERO:        # 编码器清零
             self.enc = [0, 0, 0, 0]             # 清零
         elif cmd == config.CMD_HEARTBEAT:       # 心跳
             self.ack_received.emit({"cmd": cmd, "err": 0})   # 回复
         elif cmd == config.CMD_READ_PARAMS:     # 读参数
-            self.params_received.emit({         # 返回参数
-                "kp": self.kp, "ki": self.ki, "kd": self.kd,
-                "vmax": self.vmax, "wmax": self.wmax})
+            self.params_received.emit({"kp": self.kp, "ki": self.ki, "kd": self.kd,
+                                       "vmax": self.vmax, "wmax": self.wmax})   # 返回参数
         elif cmd == config.CMD_SET_LIMITS and len(data) >= 4:    # 设置限幅
             vmax, wmax = struct.unpack_from("<HH", data, 0)      # 解析
             self.vmax, self.wmax = vmax / 1000.0, wmax / 1000.0  # 保存

@@ -1,0 +1,79 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="760" viewBox="0 0 1120 760" font-family="Microsoft YaHei, SimHei, Arial, sans-serif">
+  <rect width="1120" height="760" fill="#0E0F13"/>
+  <text x="30" y="32" fill="#ffffff" font-size="20" font-weight="bold">Keil uVision5 界面导航（示意）</text>
+
+  <!-- 菜单栏 -->
+  <rect x="30" y="50" width="1060" height="30" fill="#1B1D25" stroke="#2A2D38"/>
+  <text x="45" y="70" fill="#E6E8EF" font-size="13">File  Edit  View  Project  Flash  Debug  Peripherals  Tools  Window  Help</text>
+
+  <!-- 工具栏 -->
+  <rect x="30" y="86" width="1060" height="38" fill="#15161C" stroke="#2A2D38"/>
+  <rect x="45" y="94" width="70" height="22" rx="4" fill="#00D1B2"/>
+  <text x="80" y="109" fill="#0E0F13" font-size="11" text-anchor="middle">Build F7</text>
+  <rect x="125" y="94" width="80" height="22" rx="4" fill="#1B1D25" stroke="#4F8CFF"/>
+  <text x="165" y="109" fill="#4F8CFF" font-size="11" text-anchor="middle">Rebuild</text>
+  <rect x="215" y="94" width="95" height="22" rx="4" fill="#1B1D25" stroke="#FFC857"/>
+  <text x="262" y="109" fill="#FFC857" font-size="11" text-anchor="middle">Download F8</text>
+  <rect x="320" y="94" width="120" height="22" rx="4" fill="#1B1D25" stroke="#FF5C6C"/>
+  <text x="380" y="109" fill="#FF5C6C" font-size="11" text-anchor="middle">Debug Ctrl+F5</text>
+  <rect x="450" y="94" width="110" height="22" rx="4" fill="#1B1D25" stroke="#2A2D38"/>
+  <text x="505" y="109" fill="#C9CDD6" font-size="11" text-anchor="middle">Options（魔术棒）</text>
+
+  <!-- 左侧工程树 -->
+  <rect x="30" y="140" width="310" height="350" fill="#15161C" stroke="#2A2D38"/>
+  <text x="45" y="165" fill="#00D1B2" font-size="14" font-weight="bold">Project 工程树</text>
+  <text x="50" y="192" fill="#E6E8EF" font-size="12">Target 1: MecanumCar</text>
+  <text x="65" y="214" fill="#8A8F9E" font-size="11">Application/MDK-ARM</text>
+  <text x="65" y="236" fill="#8A8F9E" font-size="11">Application/User/Core</text>
+  <text x="85" y="258" fill="#C9CDD6" font-size="11">main.c</text>
+  <text x="85" y="278" fill="#C9CDD6" font-size="11">usart.c</text>
+  <text x="85" y="298" fill="#C9CDD6" font-size="11">stm32f4xx_it.c</text>
+  <text x="65" y="320" fill="#8A8F9E" font-size="11">Drivers/STM32F4xx_HAL_Driver</text>
+  <text x="65" y="342" fill="#00D1B2" font-size="11">User（重点）</text>
+  <text x="85" y="364" fill="#C9CDD6" font-size="11">config.h</text>
+  <text x="85" y="384" fill="#C9CDD6" font-size="11">control_mode.c</text>
+  <text x="85" y="404" fill="#C9CDD6" font-size="11">chassis_control.c</text>
+  <text x="85" y="424" fill="#C9CDD6" font-size="11">bsp_*.c / driver_comm.c</text>
+  <text x="65" y="446" fill="#8A8F9E" font-size="11">Test（测试工程里才有）</text>
+  <text x="85" y="466" fill="#C9CDD6" font-size="11">test_app.c / debug_algo.c</text>
+
+  <!-- 中间编辑器 -->
+  <rect x="355" y="140" width="470" height="350" fill="#0B0C10" stroke="#2A2D38"/>
+  <text x="370" y="165" fill="#00D1B2" font-size="14" font-weight="bold">Editor 代码编辑区</text>
+  <text x="370" y="195" fill="#8A8F9E" font-size="12">1  #include "main.h"</text>
+  <text x="370" y="217" fill="#8A8F9E" font-size="12">2  #include "user_app.h"</text>
+  <text x="370" y="239" fill="#8A8F9E" font-size="12">3</text>
+  <text x="370" y="261" fill="#8A8F9E" font-size="12">4  int main(void)</text>
+  <text x="370" y="283" fill="#8A8F9E" font-size="12">5  {</text>
+  <text x="370" y="305" fill="#8A8F9E" font-size="12">6     HAL_Init();</text>
+  <text x="370" y="327" fill="#8A8F9E" font-size="12">7     SystemClock_Config();</text>
+  <text x="370" y="349" fill="#8A8F9E" font-size="12">8     User_Init();</text>
+  <text x="370" y="371" fill="#8A8F9E" font-size="12">9     while (1) { User_Loop(); }</text>
+  <text x="370" y="393" fill="#8A8F9E" font-size="12">10 }</text>
+  <text x="370" y="425" fill="#FFC857" font-size="12">双击左侧文件名可打开；F12 跳转到函数定义</text>
+
+  <!-- 右侧快捷键 -->
+  <rect x="840" y="140" width="250" height="350" fill="#15161C" stroke="#2A2D38"/>
+  <text x="855" y="165" fill="#00D1B2" font-size="14" font-weight="bold">常用快捷键</text>
+  <text x="855" y="195" fill="#E6E8EF" font-size="12">F7        编译</text>
+  <text x="855" y="217" fill="#E6E8EF" font-size="12">F8        烧录</text>
+  <text x="855" y="239" fill="#E6E8EF" font-size="12">Ctrl+F5   进入/退出调试</text>
+  <text x="855" y="261" fill="#E6E8EF" font-size="12">F9        设置断点</text>
+  <text x="855" y="283" fill="#E6E8EF" font-size="12">F10       单步跳过</text>
+  <text x="855" y="305" fill="#E6E8EF" font-size="12">F11       单步进入</text>
+  <text x="855" y="327" fill="#E6E8EF" font-size="12">F5        运行到断点</text>
+  <text x="855" y="349" fill="#E6E8EF" font-size="12">Ctrl+F    搜索</text>
+  <text x="855" y="371" fill="#E6E8EF" font-size="12">F12       跳转定义</text>
+  <text x="855" y="405" fill="#FFC857" font-size="12">调试时看 Watch/Memory</text>
+
+  <!-- 底部输出 -->
+  <rect x="30" y="510" width="1060" height="210" fill="#0B0C10" stroke="#2A2D38"/>
+  <text x="45" y="535" fill="#00D1B2" font-size="14" font-weight="bold">Build Output 编译输出</text>
+  <text x="45" y="565" fill="#C9CDD6" font-size="12">*** Using Compiler 'V6.22', folder: 'D:\keil\ARM\ARMCLANG\Bin'</text>
+  <text x="45" y="587" fill="#C9CDD6" font-size="12">Build target 'MecanumCar'</text>
+  <text x="45" y="609" fill="#C9CDD6" font-size="12">compiling main.c...</text>
+  <text x="45" y="631" fill="#C9CDD6" font-size="12">linking...</text>
+  <text x="45" y="653" fill="#00D1B2" font-size="12">"MecanumCar\MecanumCar.axf" - 0 Error(s), 0 Warning(s).</text>
+  <text x="45" y="675" fill="#8A8F9E" font-size="12">看到 0 Error(s) 才算编译成功；有错误先看第一条错误。</text>
+  <text x="45" y="697" fill="#FFC857" font-size="12">烧录成功提示：Erase Done / Programming Done / Verify OK</text>
+</svg>

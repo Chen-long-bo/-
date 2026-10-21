@@ -1,4 +1,4 @@
-﻿#ifndef __DEBUG_ALGO_H
+#ifndef __DEBUG_ALGO_H
 #define __DEBUG_ALGO_H
 
 #include <stdint.h>
@@ -10,6 +10,4 @@ void DebugAlgo_Mecanum(float vx, float vy, float wz,
 float DebugAlgo_CountsToDistance(int32_t counts, float cpr, float wheel_dia_mm);   /* 计数->距离 */
 float DebugAlgo_SuggestCpr(int32_t counts_avg, float distance_mm, float wheel_dia_mm); /* 距离->建议CPR */
 float DebugAlgo_SuggestRotateMs(float current_ms_per_90, float measured_deg);       /* 旋转时间标定 */
-float DebugAlgo_RampStep(float current, float target, float accel, float dt);       /* 加速度平滑一步 */
-
 #endif

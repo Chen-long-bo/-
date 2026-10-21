@@ -1,4 +1,4 @@
-﻿(() => {
+(() => {
   'use strict';
 
   const $ = (selector, root = document) => root.querySelector(selector);
@@ -47,7 +47,7 @@
     { name: 'config.h', layer: '配置', group: '应用', role: '把所有可调参数集中在一个入口。', necessity: '删掉后所有模块找不到参数，工程无法编译。', tech: 'C 宏定义', key: 'CFG_*' },
     { name: 'user_app.c / .h', layer: '应用入口', group: '应用', role: '初始化模块、启动三个串口接收中断、运行主循环。', necessity: '删掉后没有初始化和主循环。', tech: 'HAL UART 中断 + 回调', key: 'User_Init / User_Loop' },
     { name: 'bsp_bluetooth.c / .h', layer: '协议', group: '协议', role: '收发 AA55 二进制帧，逐字节解析并校验。', necessity: '删掉后蓝牙无法控制，也看不到遥测。', tech: '状态机 + 校验和 + UART', key: 'Bluetooth_OnRxByte' },
-    { name: 'control_mode.c / .h', layer: '控制决策', group: '算法', role: '管理空闲、手动、缓停、位置停、路线和旋转模式。', necessity: '删掉后没有控制逻辑，车不会响应模式。', tech: '状态机 + 平滑 + PID + 遥测', key: 'ControlMode_Poll' },
+    { name: 'control_mode.c / .h', layer: '控制决策', group: '算法', role: '管理空闲、手动、位置控制、路线和旋转模式。', necessity: '删掉后没有控制逻辑，车不会响应模式。', tech: '状态机 + PID（仅测试页） + 遥测', key: 'ControlMode_Poll' },
     { name: 'chassis_control.c / .h', layer: '运动学', group: '算法', role: '把车体 vx/vy/wz 换算成 A/B/C/D 四轮线速度。', necessity: '删掉后没有全向移动能力。', tech: '麦轮逆运动学 / 正运动学', key: 'Chassis_Inverse' },
     { name: 'bsp_motor.c / .h', layer: '执行器', group: '硬件', role: '把四轮目标速度限幅到 -1~1，再调用驱动通信。', necessity: '删掉后电机收不到目标速度。', tech: '限幅 + 文本协议', key: 'Motor_SetSpeed' },
     { name: 'bsp_encoder.c / .h', layer: '传感器', group: '硬件', role: '把编码器计数换算成速度、距离，并维护软件零点。', necessity: '删掉后没有速度/距离反馈，PID 无法工作。', tech: '计数换算 + 零点', key: 'Encoder_GetWheelSpeeds' },
@@ -61,7 +61,7 @@
     { name: 'ui/main_window.py', layer: '上位机界面', group: '上位机', role: '手动遥控、路线、PID、曲线、调试中心和日志。', necessity: '删掉后没有可操作界面。', tech: 'PySide6 + pyqtgraph', key: 'MainWindow' },
     { name: 'demo_worker.py', layer: '演示模式', group: '上位机', role: '没有硬件时模拟状态和曲线。', necessity: '删掉后演示模式无法使用。', tech: '定时模拟 + 协议数据', key: 'DemoWorker' },
     { name: 'test_app.c', layer: '测试工程', group: '算法', role: '解析 ASCII 命令，做单轮、CPR、旋转、PID 仿真。', necessity: '删掉后测试和标定入口消失。', tech: '命令行解析 + 直接调用硬件层', key: 'Test_ProcessLine' },
-    { name: 'debug_algo.c / .h', layer: '测试算法', group: '算法', role: '不碰硬件的纯算法：麦轮、CPR、旋转时间、加速度。', necessity: '删掉后测试工程失去算法预览。', tech: '纯 C 计算函数', key: 'DebugAlgo_SuggestCpr' }
+    { name: 'debug_algo.c / .h', layer: '测试算法', group: '算法', role: '不碰硬件的纯算法：麦轮、CPR、旋转时间。', necessity: '删掉后测试工程失去算法预览。', tech: '纯 C 计算函数', key: 'DebugAlgo_SuggestCpr' }
   ];
 
   const codeGrid = $('#code-grid');
@@ -100,8 +100,6 @@
     { name: 'CFG_MAX_OMEGA_RAD_S', value: '1.0', unit: 'rad/s', impact: '手动 wz 限幅', fail: '旋转过快或打滑', algo: true },
     { name: 'CFG_MAX_WHEEL_SPEED_M_S', value: '1.0', unit: 'm/s', impact: '轮速归一化到 -1~1', fail: '归一化比例错，实际速度偏大/偏小', algo: true },
     { name: 'CFG_MIN_DRIVE', value: '0.30', unit: 'normalized', impact: '低速最小驱动缩放', fail: '太小震动，太大起步猛', algo: true },
-    { name: 'CFG_ACCEL_V', value: '1.0', unit: 'm/s²', impact: '线速度平滑', fail: '越大越急，越小越肉', algo: true },
-    { name: 'CFG_ACCEL_W', value: '3.0', unit: 'rad/s²', impact: '角速度平滑', fail: '越大旋转起停越急', algo: true },
     { name: 'CFG_ROTATE_DRIVE', value: '0.60', unit: 'normalized', impact: '原地旋转轮速', fail: '太小不转/震动，太大过冲', algo: true },
     { name: 'CFG_ROTATE_MS_PER_90', value: '900', unit: 'ms', impact: '时间控制旋转角度', fail: '角度偏大或偏小', algo: true },
     { name: 'CFG_ROTATE_TOL_DEG', value: '2.0', unit: '°', impact: '注释上的旋转到位容差', fail: '当前未实际使用', algo: true },
@@ -112,7 +110,6 @@
     { name: 'CFG_POS_KP', value: '0.8', unit: '—', impact: '位置环比例', fail: '大→更快但可能超调', algo: true },
     { name: 'CFG_POS_KI', value: '0.0', unit: '—', impact: '位置环积分', fail: '大→消静差但可能振荡', algo: true },
     { name: 'CFG_POS_KD', value: '0.0', unit: '—', impact: '位置环微分', fail: '大→阻尼但可能放大噪声', algo: true },
-    { name: 'CFG_SOFT_BRAKE_DECEL', value: '0.02', unit: 'm/s per 20ms', impact: '缓停减速度', fail: '大→停得快，小→停得慢', algo: true },
     { name: 'CFG_ROUTE_SIDE_MM', value: '800', unit: 'mm', impact: '注释上的路线边长', fail: '当前 PC 路线不一定使用', algo: true },
     { name: 'POS_STOP_TOL_MM', value: '10.0', unit: 'mm', impact: '位置停到位容差', fail: '太大停不准，太小来回找', algo: true },
     { name: 'SERIAL_BAUDRATE', value: '9600', unit: 'bps', impact: '上位机默认蓝牙串口速率', fail: '与固件不一致则无数据', algo: false },
@@ -378,20 +375,16 @@
   const commandMeta = {
     manual: { cmd: 0x01, name: '手动速度' },
     'brake-fast': { cmd: 0x02, name: '急刹停' },
-    'brake-soft': { cmd: 0x03, name: '缓停' },
     'pid-stop': { cmd: 0x04, name: '位置 PID 停' },
     rotate: { cmd: 0x0d, name: '原地旋转' },
     heartbeat: { cmd: 0x0a, name: '心跳' },
     stop: { cmd: 0x06, name: '急停' },
-    accel: { cmd: 0x0e, name: '设置加速度' }
   };
 
   const fieldMarkup = {
     manual: `<label>vx / m/s<input id="proto-vx" type="number" step="0.01" value="1.0" inputmode="decimal"></label><label>vy / m/s<input id="proto-vy" type="number" step="0.01" value="0" inputmode="decimal"></label><label>wz / rad/s<input id="proto-wz" type="number" step="0.01" value="0" inputmode="decimal"></label>`,
-    'brake-soft': `<label>减速档位 / 0~255<input id="proto-decel" type="number" min="0" max="255" step="1" value="0" inputmode="numeric"></label>`,
     'pid-stop': `<label>目标距离 / mm<input id="proto-mm" type="number" step="1" value="500" inputmode="numeric"></label>`,
     rotate: `<label>旋转角度 / °<input id="proto-angle" type="number" step="1" value="90" inputmode="decimal"></label><small>正数左转，负数右转；发送单位为 0.1°。</small>`,
-    accel: `<label>线加速度 / m/s²<input id="proto-av" type="number" step="0.01" value="1.0" inputmode="decimal"></label><label>角加速度 / rad/s²<input id="proto-aw" type="number" step="0.01" value="3.0" inputmode="decimal"></label>`,
     'brake-fast': `<p class="form-note">该指令没有数据字段。</p>`,
     heartbeat: `<p class="form-note">该指令没有数据字段；发送后期待 ACK。</p>`,
     stop: `<p class="form-note">该指令没有数据字段；立即停车并清目标。</p>`
@@ -422,10 +415,8 @@
 
   function readProtocolData(command) {
     if (command === 'manual') return [...int16LE(num('proto-vx') * 1000), ...int16LE(num('proto-vy') * 1000), ...int16LE(num('proto-wz') * 1000)];
-    if (command === 'brake-soft') return [Math.round(num('proto-decel')) & 0xff];
     if (command === 'pid-stop') return int16LE(num('proto-mm'));
     if (command === 'rotate') return int16LE(num('proto-angle') * 10);
-    if (command === 'accel') return [...uint16LE(num('proto-av') * 1000), ...uint16LE(num('proto-aw') * 1000)];
     return [];
   }
 
@@ -515,10 +506,6 @@
       const raw = data[0] | (data[1] << 8);
       const signed = raw > 32767 ? raw - 65536 : raw;
       decoded = `目标距离=${signed} mm`;
-    } else if (cmd === 0x0e && data.length >= 4) {
-      const av = (data[0] | (data[1] << 8)) / 1000;
-      const aw = (data[2] | (data[3] << 8)) / 1000;
-      decoded = `线加速度=${av.toFixed(3)} m/s²，角加速度=${aw.toFixed(3)} rad/s²`;
     }
     result.innerHTML = `
       <strong>${ok ? '校验通过' : '校验失败'}</strong> · ${meta ? meta.name : `未知指令 0x${cmd.toString(16).toUpperCase()}`}
@@ -558,4 +545,5 @@
   /* ---------- 页面加载完成后的轻量初始化 ---------- */
   document.documentElement.classList.add('is-ready');
 })();
+
 

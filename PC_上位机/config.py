@@ -12,7 +12,7 @@ BAUDRATE_OPTIONS = [9600, 115200]   # 可选波特率（COM5有线调试用11520
 PORT_BAUDRATE = {"COM5": 115200}    # 指定端口的默认波特率
 SERIAL_TIMEOUT = 0.05               # 串口读超时（秒）
 DEFAULT_PORT = "COM7"               # 当前 HC-04 的“传出”口（SPP 客户端）
-PORT_CANDIDATES = ["COM7", "COM8", "COM5"]   # 候选端口（COM7=蓝牙传出）
+PORT_CANDIDATES = ["COM7", "COM4", "COM5"]   # 候选端口（COM7=蓝牙传出，COM4=蓝牙传入）
 TX_INTERVAL_MS = 50                 # 手动控制发送周期（毫秒）
 
 # ===== 车体尺寸（已量） =====
@@ -26,8 +26,6 @@ MAX_VX = 1.00                       # 最大前后速度 m/s（摇杆拉满=1.0�
 MAX_VY = 1.00                       # 最大左右速度 m/s（摇杆拉满=1.0）
 MAX_WZ = 1.50                       # 最大旋转角速度 rad/s
 MIN_DRIVE = 0.30                     # 固件最小有效驱动（归一化，仅显示/标定参考）
-ACCEL_V = 1.00                       # 固件默认线加速度 m/s²（仅显示/标定参考）
-ACCEL_W = 3.00                       # 固件默认角加速度 rad/s²（仅显示/标定参考）
 ROTATE_DRIVE = 0.60                  # 固件原地旋转轮速（归一化，仅显示）
 ROTATE_MS_PER_90 = 900               # 固件转90°默认时间 ms（用于旋转标定）
 POS_STOP_TOL_MM = 10.0               # 固件位置停容差 mm（仅显示）
@@ -35,7 +33,6 @@ POS_STOP_TOL_MM = 10.0               # 固件位置停容差 mm（仅显示）
 # ===== 协议指令码 =====
 CMD_MANUAL = 0x01                   # 手动全向速度
 CMD_BRAKE_FAST = 0x02               # 急刹停
-CMD_BRAKE_SOFT = 0x03               # 缓停
 CMD_PID_STOP = 0x04                 # PID精准停
 CMD_ROUTE = 0x05                    # 固定路线
 CMD_STOP_ALL = 0x06                 # 急停
@@ -46,7 +43,6 @@ CMD_HEARTBEAT = 0x0A                # 心跳
 CMD_READ_PARAMS = 0x0B              # 读取参数
 CMD_SET_LIMITS = 0x0C               # 设置限幅
 CMD_ROTATE_ANGLE = 0x0D             # 原地旋转指定角度（0.1度）
-CMD_SET_ACCEL = 0x0E                # 设置加速度限制（速度平滑）
 
 # ===== 协议回报码 =====
 RPT_STATUS = 0x81                   # 状态帧
@@ -70,7 +66,7 @@ COLOR_YELLOW = "#FFC857"            # 警告
 # ===== 曲线颜色（A/B/C/D 四轮） =====
 WHEEL_COLORS = ["#00D1B2", "#4F8CFF", "#FFC857", "#FF5C6C"]
 
-# ===== 默认PID与路线 =====
+# ===== 控制与测试页默认值 =====
 DEFAULT_POS_KP = 0.80               # 位置环Kp
 DEFAULT_POS_KI = 0.00               # 位置环Ki
 DEFAULT_POS_KD = 0.00               # 位置环Kd
@@ -78,6 +74,8 @@ DEFAULT_ROUTE_SIDE_MM = 800         # 正方形边长 mm
 
 # ===== 曲线缓存点数 =====
 CURVE_MAX_POINTS = 400              # 曲线保留点数
+
+
 
 
 

@@ -1,2 +1,1 @@
-mecanumcar\pid.o: ../User/pid.c
-mecanumcar\pid.o: ../User/pid.h
+mecanumcar/pid.o: ..\User\pid.c ..\User\pid.h
